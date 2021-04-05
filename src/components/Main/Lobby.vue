@@ -1,7 +1,7 @@
 <template>
 <div class="MainPage">
-  <div class="circle leftCircle"></div>
-  <div class="circle rightCircle"></div>
+<!--  <div class="circle leftCircle"></div>-->
+<!--  <div class="circle rightCircle"></div>-->
 
 </div>
 </template>

@@ -1,7 +1,8 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import Login from '../components/LoginPart/Login'
-import MainPage from '../components/MainPagePart/MainPage'
+import Login from '../components/Login/Login'
+import Lobby from '../components/Main/Lobby'
+
 // import store from '/store/user'
 
 Vue.use(Router)
@@ -19,8 +20,8 @@ const router = new Router({
     },
     {
       path: '/lobby',
-      name: 'mainPage',
-      component: MainPage,
+      name: 'lobby',
+      component: Lobby,
       meta: {
         requireAuth: true
       }

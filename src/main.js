@@ -9,6 +9,9 @@ import 'element-ui/lib/theme-chalk/index.css'
 
 import store from '../store/user'
 
+// main.js
+// require('./mock')
+
 Vue.use(Vuex)
 Vue.use(ElementUI)
 
