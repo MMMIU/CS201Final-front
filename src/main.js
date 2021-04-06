@@ -7,10 +7,10 @@ import router from './router'
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
 
-import store from '../store/user'
+import store from './store/user'
 
 // main.js
-// require('./mock')
+require('./mock')
 
 Vue.use(Vuex)
 Vue.use(ElementUI)
