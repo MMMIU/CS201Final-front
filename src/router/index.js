@@ -1,9 +1,10 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import Login from '../components/login/Login'
-import Lobby from '../components/mainRoom/Lobby'
-
-import store from '../store/user'
+import Lobby from '../components/lobby/Lobby'
+import GameRoom from '../components/game/GameRoom'
+import Profile from '../components/profile/Profile'
+import store from '../store'
 
 Vue.use(Router)
 
@@ -34,6 +35,24 @@ const router = new Router({
         allowBack: false,
         requireAuth: true
       }
+    },
+    {
+      path: '/gameroom',
+      name: 'gameroom',
+      component: GameRoom,
+      meta: {
+        allowBack: false,
+        requireAuth: true
+      }
+    },
+    {
+      path: '/profile',
+      name: 'profile',
+      component: Profile,
+      meta: {
+        allowBack: true,
+        requireAuth: true
+      }
     }
   ]
 })
@@ -48,7 +67,6 @@ router.beforeEach((to, from, next) => {
       console.log('该页面需要登陆')
       next({
         path: '/'
-        // query: {redirect: to.fullPath} // 将跳转的路由path作为参数，登录成功后跳转到该路由
       })
     }
   } else {

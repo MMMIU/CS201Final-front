@@ -14,11 +14,12 @@ export default {
       height: 0,
       clearAllInterval: false,
       numCircles: 30,
-      refreshTime: 10,
+      refreshTime: 25,
       maxMoveSpeedX: 3,
       minMoveSpeedX: 1,
       maxMoveSpeedY: 3,
       minMoveSpeedY: 1,
+      moveRate: 1,
       screenWidth: document.body.clientWidth,
       screenHeight: document.body.clientHeight
     }
@@ -58,6 +59,7 @@ export default {
         ((Math.random() - 0.5) * (this.maxMoveSpeedY - this.minMoveSpeedY) + this.minMoveSpeedY))
       if (speedX === 0)speedX = (Math.random() > 0.5 ? 1 : -1) * this.minMoveSpeedX
       if (speedY === 0)speedY = (Math.random() > 0.5 ? 1 : -1) * this.minMoveSpeedY
+      let moveCount = 0
       setInterval(() => {
         circleSize = Math.round(this.screenWidth * 0.25)
         circleStyle.width = circleSize + 'px'
@@ -74,11 +76,15 @@ export default {
           circlePosY = this.screenHeight - circleSize
           speedY = -Math.abs(speedY)
         }
-        circlePosX += speedX
-        circlePosY += speedY
         circleStyle.backgroundColor = this.getColor(circlePosX, circlePosY)
-        circleStyle.left = circlePosX + 'px'
-        circleStyle.top = circlePosY + 'px'
+        if (moveCount >= this.moveRate) {
+          moveCount = 0
+          circlePosX += speedX
+          circlePosY += speedY
+          circleStyle.left = circlePosX + 'px'
+          circleStyle.top = circlePosY + 'px'
+        }
+        moveCount++
       }, this.refreshTime)
     },
     getColor (circlePosX, circlePosY) {

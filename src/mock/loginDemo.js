@@ -1,13 +1,13 @@
-let demoList = {
+let loginDemo = {
   token: 1234567890,
-  user: 'MMMIU'
+  username: 'MMMIU'
 }
 
 export default {
   'post|/logincheck': option => {
     return {
       status: 200,
-      data: demoList
+      data: loginDemo
     }
   }
 }

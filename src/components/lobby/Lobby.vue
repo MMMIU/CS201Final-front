@@ -1,9 +1,6 @@
 <template>
 <div id="lobby">
-  <div class="musicPanel">
-    <audio id="music" src="static/media/music/JABBERLOOP - ソレソレ.mp3"></audio>
-    <div id="playIcon" class="el-icon-video-play" @click="playPause"></div>
-  </div>
+  <div class="welcome">Welcome {{username}} {{token}}</div>
   <div class="mobile" v-if="onMobile">
     <div class="profile align-center-vertical" @click="goProfile">Profile</div>
     <div class="game align-center-vertical" @click="goGameRoom">New Game</div>
@@ -14,23 +11,27 @@
 
 <script>
 
+import {axiosWrapper} from '../../api'
+
 export default {
   name: 'Lobby',
   data () {
     return {
-      musicPlaying: false,
-      refreshTime: 20,
+      username: this.$store.state.username,
+      token: this.$store.state.token,
+      refreshTime: 30,
+      timeCirclePopUp: 1,
       maxMoveSpeedX: 3,
       minMoveSpeedX: 3,
       maxMoveSpeedY: 3,
       minMoveSpeedY: 3,
       screenWidth: document.body.clientWidth,
       screenHeight: document.body.clientHeight,
-      circleSize: 0.3,
+      circleSizeRatio: 0.3,
       contentCircleSize: 0.9,
       roomNumber: null,
       joinButtonEnabled: false,
-      onMobile: document.body.clientWidth <= 768
+      onMobile: (document.body.clientWidth <= this.MOBILE)
     }
   },
   created () {
@@ -38,11 +39,11 @@ export default {
       return (() => {
         this.screenWidth = document.body.clientWidth
         this.screenHeight = document.body.clientHeight
-        if (this.screenWidth > 768 && this.onMobile) {
+        if (this.screenWidth > this.MOBILE && this.onMobile) {
           this.initializeCircles()
           this.onMobile = false
         }
-        if (this.screenWidth <= 768 && !this.onMobile) {
+        if (this.screenWidth <= this.MOBILE && !this.onMobile) {
           this.removeCircles()
           this.onMobile = true
         }
@@ -50,28 +51,31 @@ export default {
     })
   },
   mounted () {
-    this.musicPlaying = document.getElementById('music').paused
-    if (document.getElementById('music')) {
-      document.getElementById('music').volume = 0.3
-    }
+    this.onMobile = document.body.clientWidth <= this.MOBILE
     if (!this.onMobile) {
       this.initializeCircles()
     }
   },
   methods: {
     initializeCircles () {
-      let profileCircle = this.createOption('Profile', 0.5, 'antiquewhite')
-      profileCircle.addEventListener('click', () => {
-
-      })
-      let newGameCircle = this.createOption('Start', 0.5, 'antiquewhite')
-      newGameCircle.addEventListener('click', () => {
-
-      })
-      let joinCircle = this.createOption('Join', 0.5, 'antiquewhite')
-      joinCircle.addEventListener('click', () => {
-        this.openJoinBox()
-      })
+      if (!document.getElementById('profileCircle')) {
+        let profileCircle = this.createOption('Profile', 0.5, 'antiquewhite')
+        profileCircle.addEventListener('click', () => {
+          this.goProfile()
+        })
+      }
+      if (!document.getElementById('startCircle')) {
+        let newGameCircle = this.createOption('Start', 0.5, 'antiquewhite')
+        newGameCircle.addEventListener('click', () => {
+          this.goGameRoom()
+        })
+      }
+      if (!document.getElementById('joinCircle')) {
+        let joinCircle = this.createOption('Join', 0.5, 'antiquewhite')
+        joinCircle.addEventListener('click', () => {
+          this.openJoinBox()
+        })
+      }
     },
     removeCircles () {
       let profileCircle = document.getElementById('profileCircle')
@@ -81,21 +85,10 @@ export default {
       let joinCircle = document.getElementById('joinCircle')
       if (joinCircle) { joinCircle.parentNode.removeChild(joinCircle) }
     },
-    playPause () {
-      if (this.musicPlaying) {
-        document.getElementById('music').pause()
-        document.getElementById('playIcon').className = 'el-icon-video-play'
-        this.musicPlaying = false
-      } else {
-        document.getElementById('music').play()
-        document.getElementById('playIcon').className = 'el-icon-video-pause'
-        this.musicPlaying = true
-      }
-    },
     createCircle (text) {
       let circle = document.createElement('div')
       circle.id = text.toLowerCase() + 'Circle'
-      let circleSize = Math.floor(this.screenWidth * this.circleSize)
+      let circleSize = Math.floor(this.screenWidth * this.circleSizeRatio)
       let circlePosX = Math.floor(Math.random() * (this.screenWidth - circleSize))
       let circlePosY = Math.floor(Math.random() * (this.screenHeight - circleSize))
       let circleStyle = circle.style
@@ -109,7 +102,7 @@ export default {
       circleStyle.display = 'flex'
       circleStyle.alignItems = 'center'
       circleStyle.justifyContent = 'center'
-      circleStyle.transition = '1s'
+      circleStyle.transition = this.timeCirclePopUp + 's'
       circleStyle.cursor = 'pointer'
       circleStyle.overflow = 'hidden'
       document.getElementById('lobby').appendChild(circle)
@@ -126,15 +119,15 @@ export default {
         circleStyle.top = circlePosY + 'px'
         circleStyle.width = circleSize + 'px'
         circleStyle.height = circleSize + 'px'
+        setTimeout(() => {
+          circleStyle.transition = '0s'
+          move(this)
+        }, this.timeCirclePopUp * 1000)
       }, 1)
-      setTimeout(() => {
-        circleStyle.transition = '0s'
-        move(this)
-      }, 1001)
       function move (that) {
         setInterval(() => {
           if (!paused) {
-            circleSize = Math.round(that.screenWidth * that.circleSize)
+            circleSize = Math.round(that.screenWidth * that.circleSizeRatio)
             circleStyle.width = circleSize + 'px'
             circleStyle.height = circleSize + 'px'
             if (circlePosX <= 0) {
@@ -167,10 +160,10 @@ export default {
         circleStyle.zIndex = '1'
         paused = false
       }
-      circle.onmouseenter = e => {
+      circle.onmouseenter = () => {
         pause()
       }
-      circle.onmouseleave = e => {
+      circle.onmouseleave = () => {
         resume()
       }
       return circle
@@ -191,18 +184,18 @@ export default {
       textBox.style.width = '90%'
       content.appendChild(textBox)
       let that = this
-      setTimeout(e => {
-        contentStyle.lineHeight = this.screenWidth * this.circleSize * this.contentCircleSize + 'px'
+      setTimeout(() => {
+        contentStyle.lineHeight = this.screenWidth * this.circleSizeRatio * this.contentCircleSize + 'px'
         textBox.innerText = text
         textBox.style.textAlign = 'center'
         textBox.style.color = color
         let scale = this.screenWidth / textBox.offsetWidth * coefficient
         textBox.style.fontSize = scale + 'rem'
         let thisThat = that
-        setInterval(e => {
-          contentStyle.lineHeight = thisThat.screenWidth * thisThat.circleSize * thisThat.contentCircleSize + 'px'
+        setInterval(() => {
+          contentStyle.lineHeight = thisThat.screenWidth * thisThat.circleSizeRatio * thisThat.contentCircleSize + 'px'
         }, thisThat.refreshTime)
-      }, 1001)
+      }, this.timeCirclePopUp * 1000 + 1)
       circle.appendChild(content)
       return circle
     },
@@ -210,8 +203,7 @@ export default {
       const r = 0
       const g = 50 + Math.round((circlePosX / (this.screenWidth - circlePosX)) * 255 / 2)
       const b = 50 + Math.round((circlePosY / (this.screenHeight - circlePosY)) * 255 / 2)
-      const color = `rgba(${r},${g},${b})`
-      return color
+      return `rgba(${r},${g},${b})`
     },
     openJoinBox () {
       this.$prompt('Enter room number:', 'Join a room', {
@@ -219,12 +211,33 @@ export default {
         cancelButtonText: 'Cancel'
       }).then(({ value }) => {
         this.roomNumber = value
+        this.goGameRoom(this.roomNumber)
       })
     },
     goProfile () {
+      axiosWrapper('/requestprofile', 'post', {token: this.token}).then(data => {
+        console.log(data)
+        this.$message.success('Assign Success!')
+        this.$store.commit('SET_TOTALGAMES', data.data.totalGames)
+        this.$store.commit('SET_WINGAMES', data.data.winGames)
+        this.$router.push({name: 'profile'})
+      }).catch(e => {
+        if (e) {
+          this.$message.error('Assign Failed!')
+        }
+      })
     },
     goGameRoom () {
-
+      axiosWrapper('/requestroom', 'post', {token: this.token, roomNumber: this.roomNumber}).then(data => {
+        console.log(data)
+        this.$store.commit('SET_ROOMNUMBER', data.data.roomNumber)
+        this.$message.success('Assign Success!')
+        this.$router.push({name: 'gameroom'})
+      }).catch(e => {
+        if (e) {
+          this.$message.error('Assign Failed!')
+        }
+      })
     }
   }
 
@@ -237,16 +250,12 @@ export default {
   height: 100%;
   overflow: hidden;
 }
-.musicPanel{
-  width: 30px;
-  height: 30px;
+.welcome{
+  width: 100px;
+  height: 20px;
   position: fixed;
   top: 0;
-  right: 0;
-  font-size: 30px;
-}
-.el-icon-video-play, .el-icon-video-pause{
-  cursor: pointer;
+  left: 0;
 }
 .mobile{
   width: 100%;

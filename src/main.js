@@ -7,8 +7,10 @@ import router from './router'
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
 
-import store from './store/user'
-
+import store from './store'
+import global from './global'
+import {twoDecimal} from './filters/index'
+Vue.prototype.MOBILE = global.MOBILE
 // main.js
 require('./mock')
 
@@ -16,6 +18,8 @@ Vue.use(Vuex)
 Vue.use(ElementUI)
 
 Vue.config.productionTip = false
+
+Vue.filter('twoDecimal', twoDecimal)
 
 /* eslint-disable no-new */
 new Vue({

@@ -1,37 +1,39 @@
 <template>
   <div id="app">
+    <background-music></background-music>
     <circles v-if="showCircles"></circles>
     <router-view/>
   </div>
 </template>
 
 <script>
-import circles from '../src/components/backgroundAnimation/backgroundCircles'
+import circles from './components/background/backgroundCircles'
+import backgroundMusic from './components/background/backgroundMusic'
 export default {
   name: 'App',
   data () {
     return {
       screenWidth: document.body.clientWidth,
-      showCircles: this.screenWidth > 768
+      showCircles: this.screenWidth > this.MOBILE
     }
   },
-  components: {circles},
+  components: {circles, backgroundMusic},
   created () {
     window.addEventListener('resize', () => {
       this.screenWidth = document.body.clientWidth
-      this.showCircles = (this.screenWidth > 768)
+      this.showCircles = (this.screenWidth > this.MOBILE)
     })
   },
   mounted () {
-    // this.useCircles = this.$route.path !== '/login'
+    this.showCircles = this.screenWidth > this.MOBILE
   },
   watch: {
-    '$route.path' (val) {
-      // this.useCircles = (val !== '/login')
-    },
+    // '$route.path' (val) {
+    //   this.useCircles = (val !== '/login')
+    // },
     screenWidth (val) {
       this.screenWidth = val
-      this.showCircles = val > 768
+      this.showCircles = val > this.MOBILE
     }
   }
 }
