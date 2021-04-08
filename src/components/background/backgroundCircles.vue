@@ -15,10 +15,10 @@ export default {
       clearAllInterval: false,
       numCircles: 30,
       refreshTime: 25,
-      maxMoveSpeedX: 3,
-      minMoveSpeedX: 1,
-      maxMoveSpeedY: 3,
-      minMoveSpeedY: 1,
+      maxMoveSpeedX: 20,
+      minMoveSpeedX: 10,
+      maxMoveSpeedY: 20,
+      minMoveSpeedY: 10,
       moveRate: 1,
       screenWidth: document.body.clientWidth,
       screenHeight: document.body.clientHeight
@@ -39,6 +39,7 @@ export default {
   },
   methods: {
     createCircle () {
+      let paused = false
       let circle = document.createElement('div')
       // let circleSize = Math.round(this.screenWidth * 0.2 + Math.random() * this.screenWidth * 0.1)
       let circleSize = Math.round(this.screenWidth * 0.25)
@@ -52,6 +53,8 @@ export default {
       circleStyle.backgroundColor = this.getColor(circlePosX, circlePosY)
       circleStyle.left = circlePosX + 'px'
       circleStyle.top = circlePosY + 'px'
+      circleStyle.transition = '1s'
+      circleStyle.transitionTimingFunction = 'linear'
       document.getElementById('backgroundCircles').appendChild(circle)
       let speedX = Math.round((Math.random() > 0.5 ? 1 : -1) *
         ((Math.random() - 0.5) * (this.maxMoveSpeedX - this.minMoveSpeedX) + this.minMoveSpeedX))
@@ -77,26 +80,39 @@ export default {
           speedY = -Math.abs(speedY)
         }
         circleStyle.backgroundColor = this.getColor(circlePosX, circlePosY)
-        if (moveCount >= this.moveRate) {
-          moveCount = 0
-          circlePosX += speedX
-          circlePosY += speedY
-          circleStyle.left = circlePosX + 'px'
-          circleStyle.top = circlePosY + 'px'
+        if (!paused) {
+          if (moveCount >= this.moveRate) {
+            moveCount = 0
+            circlePosX += speedX
+            circlePosY += speedY
+            circleStyle.left = circlePosX + 'px'
+            circleStyle.top = circlePosY + 'px'
+          }
+          moveCount++
         }
-        moveCount++
       }, this.refreshTime)
+      // function pause () {
+      //   paused = true
+      // }
+      // function resume () {
+      //   paused = false
+      // }
+      // circle.onmouseenter = () => {
+      //   pause()
+      // }
+      // circle.onmouseleave = () => {
+      //   resume()
+      // }
     },
     getColor (circlePosX, circlePosY) {
       const r = 0
       const g = 50 + Math.round((circlePosX / (this.screenWidth - circlePosX)) * 255 / 2)
       const b = 50 + Math.round((circlePosY / (this.screenHeight - circlePosY)) * 255 / 2)
-      const color = `rgba(${r},${g},${b})`
-      return color
-    },
-    stopCircle () {
-      this.clearAllInterval = !this.clearAllInterval
+      return `rgba(${r},${g},${b})`
     }
+    // stopCircle () {
+    //   this.clearAllInterval = !this.clearAllInterval
+    // }
   }
 }
 </script>

@@ -8,14 +8,20 @@ const mutations = {
     state.username = data
     window.sessionStorage.setItem('username', data)
   },
-  SET_ROOMNUMBER: (state, data) => {
+  SET_ROOM_NUMBER: (state, data) => {
     state.roomNumber = data
   },
-  SET_TOTALGAMES: (state, data) => {
+  SET_TOTAL_GAMES: (state, data) => {
     state.totalGames = data
   },
-  SET_WINGAMES: (state, data) => {
+  SET_WIN_GAMES: (state, data) => {
     state.winGames = data
+  },
+  SET_OPPONENT: (state, data) => {
+    state.opponent = data
+  },
+  SET_OPPONENT_SCORE: (state, data) => {
+    state.opponentScore = data
   },
   LOGOUT: (state) => {
     // 登出的时候要清除token

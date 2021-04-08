@@ -10,7 +10,9 @@ const state = {
   token: window.sessionStorage.getItem('token'),
   roomNumber: 0,
   totalGames: 0,
-  winGames: 0
+  winGames: 0,
+  opponent: null,
+  opponentScore: 0
 }
 
 const actions = {

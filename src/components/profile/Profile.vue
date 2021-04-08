@@ -1,7 +1,7 @@
 <template>
   <div class="profile">
     <div class="container">
-      <el-container class="userEnter" element-loading-background="rgba(250, 250, 250, 0.8)">
+      <el-container class="panel" element-loading-background="rgba(250, 250, 250, 0.8)">
         <el-header height="13rem" class="welcome">
           Profile
         </el-header>
@@ -11,7 +11,7 @@
           <br> Total number of winning games: {{win}}
           <br> Win rate: {{winRate|twoDecimal}}%
         </el-main>
-        <el-footer class="register">
+        <el-footer class="backButton">
           <el-button type="primary" style="width: 100%;margin-top: 1rem" @click="goBack">Back To Lobby</el-button>
         </el-footer>
       </el-container>
@@ -69,31 +69,28 @@ export default {
   font-weight: 100;
 }
 
-.userEnter {
+.panel {
   width: 100%;
   height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
   position: absolute;
-}
-
-.userEnter {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-.register {
+.backButton {
   color: #303133;
   text-align: center;
   margin-bottom: 3rem;
 }
 
-.register span{
+.backButton span{
   color: #409EFF;
   cursor: pointer;
 }
 
-.register span:hover{
+.backButton span:hover{
   color: #60BEFF;
 }
 
@@ -112,11 +109,11 @@ export default {
     display: none;
   }
 
-  .userEnter {
+  .panel {
     background-color: rgba(255, 255, 255, 0);
   }
 
-  .register {
+  .backButton {
     margin-top: 1rem;
     color: #606266;
   }

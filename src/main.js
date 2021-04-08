@@ -9,7 +9,7 @@ import 'element-ui/lib/theme-chalk/index.css'
 
 import store from './store'
 import global from './global'
-import {twoDecimal} from './filters/index'
+import {twoDecimal, upperCase} from './filters/index'
 Vue.prototype.MOBILE = global.MOBILE
 // main.js
 require('./mock')
@@ -20,6 +20,7 @@ Vue.use(ElementUI)
 Vue.config.productionTip = false
 
 Vue.filter('twoDecimal', twoDecimal)
+Vue.filter('upperCase', upperCase)
 
 /* eslint-disable no-new */
 new Vue({

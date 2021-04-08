@@ -11,7 +11,7 @@
                     show-password></el-input>
           <el-input v-show="showConfirmInput" type="password" placeholder="Confirm Password" v-model="password" style="margin-top: 1rem"
                     show-password></el-input>
-          <el-button type="primary" :disabled="loginButtonEnabled" style="width: 100%;margin-top: 1rem" @click="login">{{ type }}
+          <el-button type="primary" :disabled="loginButtonEnabled" style="width: 100%;margin-top: 1rem" @click="login">{{ type | upperCase}}
           </el-button>
         </el-main>
         <el-footer class="register">{{registerPrompt}}

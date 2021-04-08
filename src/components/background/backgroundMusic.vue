@@ -1,6 +1,6 @@
 <template>
   <div class="musicPanel">
-    <audio id="music" src="static/media/music/JABBERLOOP - ソレソレ.mp3" autoplay></audio>
+    <audio id="music" src="static/media/music/JABBERLOOP - ソレソレ.mp3"></audio>
     <div id="playIcon" class="el-icon-video-play" @click="playPause"></div>
   </div>
 </template>

@@ -21,10 +21,11 @@ export default {
       token: this.$store.state.token,
       refreshTime: 30,
       timeCirclePopUp: 1,
-      maxMoveSpeedX: 3,
-      minMoveSpeedX: 3,
-      maxMoveSpeedY: 3,
-      minMoveSpeedY: 3,
+      timeCirclePopUpDelay: 300,
+      maxMoveSpeedX: 1,
+      minMoveSpeedX: 1,
+      maxMoveSpeedY: 1,
+      minMoveSpeedY: 1,
       screenWidth: document.body.clientWidth,
       screenHeight: document.body.clientHeight,
       circleSizeRatio: 0.3,
@@ -102,7 +103,6 @@ export default {
       circleStyle.display = 'flex'
       circleStyle.alignItems = 'center'
       circleStyle.justifyContent = 'center'
-      circleStyle.transition = this.timeCirclePopUp + 's'
       circleStyle.cursor = 'pointer'
       circleStyle.overflow = 'hidden'
       document.getElementById('lobby').appendChild(circle)
@@ -114,6 +114,20 @@ export default {
       if (speedY === 0)speedY = (Math.random() > 0.5 ? 1 : -1) * this.minMoveSpeedY
       let paused = false
       // set timer
+      // let growCount = 0
+      // let timer = setInterval(() => {
+      //   circleStyle.left = circlePosX + 'px'
+      //   circleStyle.top = circlePosY + 'px'
+      //   circleStyle.width = growCount + 'px'
+      //   circleStyle.height = growCount + 'px'
+      //   if (growCount >= this.timeCirclePopUp * 1000) {
+      //     clearInterval(timer)
+      //     move(this)
+      //   } else {
+      //     growCount++
+      // }, 1)
+      //   }
+      circleStyle.transition = this.timeCirclePopUp + 's'
       setTimeout(() => {
         circleStyle.left = circlePosX + 'px'
         circleStyle.top = circlePosY + 'px'
@@ -123,7 +137,7 @@ export default {
           circleStyle.transition = '0s'
           move(this)
         }, this.timeCirclePopUp * 1000)
-      }, 1)
+      }, this.timeCirclePopUpDelay)
       function move (that) {
         setInterval(() => {
           if (!paused) {
@@ -153,7 +167,7 @@ export default {
         }, that.refreshTime)
       }
       function pause () {
-        circleStyle.zIndex = '99999'
+        circleStyle.zIndex = '2'
         paused = true
       }
       function resume () {
@@ -191,11 +205,10 @@ export default {
         textBox.style.color = color
         let scale = this.screenWidth / textBox.offsetWidth * coefficient
         textBox.style.fontSize = scale + 'rem'
-        let thisThat = that
         setInterval(() => {
-          contentStyle.lineHeight = thisThat.screenWidth * thisThat.circleSizeRatio * thisThat.contentCircleSize + 'px'
-        }, thisThat.refreshTime)
-      }, this.timeCirclePopUp * 1000 + 1)
+          contentStyle.lineHeight = that.screenWidth * that.circleSizeRatio * that.contentCircleSize + 'px'
+        }, this.refreshTime)
+      }, this.timeCirclePopUp * 1000 + this.timeCirclePopUpDelay)
       circle.appendChild(content)
       return circle
     },
@@ -218,8 +231,8 @@ export default {
       axiosWrapper('/requestprofile', 'post', {token: this.token}).then(data => {
         console.log(data)
         this.$message.success('Assign Success!')
-        this.$store.commit('SET_TOTALGAMES', data.data.totalGames)
-        this.$store.commit('SET_WINGAMES', data.data.winGames)
+        this.$store.commit('SET_TOTAL_GAMES', data.data.totalGames)
+        this.$store.commit('SET_WIN_GAMES', data.data.winGames)
         this.$router.push({name: 'profile'})
       }).catch(e => {
         if (e) {
@@ -230,7 +243,7 @@ export default {
     goGameRoom () {
       axiosWrapper('/requestroom', 'post', {token: this.token, roomNumber: this.roomNumber}).then(data => {
         console.log(data)
-        this.$store.commit('SET_ROOMNUMBER', data.data.roomNumber)
+        this.$store.commit('SET_ROOM_NUMBER', data.data.roomNumber)
         this.$message.success('Assign Success!')
         this.$router.push({name: 'gameroom'})
       }).catch(e => {
