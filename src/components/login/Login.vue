@@ -1,7 +1,7 @@
 <template>
   <div class="login">
-    <div class="container">
-      <el-container v-loading="loading" class="userEnter" element-loading-background="rgba(250, 250, 250, 0.8)">
+    <div  class="container">
+      <el-container id="loginContainer" v-loading="loading" class="userEnter" element-loading-background="rgba(250, 250, 250, 0.8)">
         <el-header height="13rem" class="welcome">
           Welcome
         </el-header>
@@ -18,6 +18,9 @@
           <span @click="changeMode">{{registerButtonText}}</span>
         </el-footer>
       </el-container>
+      <div id="containerBackground" class="containerBackground">
+        <div id = "containerBackgroundCircle" class="containerBackgroundCircle" :class="{'containerBackgroundCircleFull':mouseHovering}"></div>
+      </div>
     </div>
   </div>
 </template>
@@ -43,14 +46,50 @@ export default {
       loginButtonEnabled: false,
       loading: false,
       showConfirmInput: false,
-      waitTime: 500
+      waitTime: 500,
+      mouseHovering: false,
+      backgroundChangeTime: 0.5,
+      changeBusy: false,
+      onMobile: (document.body.clientWidth <= this.MOBILE)
     }
   },
   created () {
     window.addEventListener('resize', () => {
       return (() => {
         this.screenWidth = document.body.clientWidth
+        if (this.screenWidth > this.MOBILE && this.onMobile) {
+          this.onMobile = false
+        }
+        if (this.screenWidth <= this.MOBILE && !this.onMobile) {
+          this.onMobile = true
+        }
       })()
+    })
+  },
+  mounted () {
+    let container = document.getElementById('loginContainer')
+    let containerBackground = document.getElementById('containerBackground')
+    let containerBackgroundCircle = document.getElementById('containerBackgroundCircle')
+    containerBackgroundCircle.style.transition = this.backgroundChangeTime + 's'
+    container.addEventListener('mouseenter', (e) => {
+      if (this.onMobile) return
+      containerBackground.style.left = e.offsetX - Math.floor((containerBackground.clientWidth + 1) / 2) + 'px'
+      containerBackground.style.top = e.offsetY - Math.floor((containerBackground.clientHeight + 1) / 2) + 'px'
+      this.mouseHovering = true
+      this.changeBusy = true
+      setTimeout(() => {
+        this.changeBusy = false
+      }, this.backgroundChangeTime * 1000)
+    })
+    container.addEventListener('mouseleave', (e) => {
+      if (this.onMobile) return
+      containerBackground.style.left = e.offsetX - Math.floor((containerBackground.clientWidth + 1) / 2) + 'px'
+      containerBackground.style.top = e.offsetY - Math.floor((containerBackground.clientHeight + 1) / 2) + 'px'
+      this.mouseHovering = false
+      this.changeBusy = true
+      setTimeout(() => {
+        this.changeBusy = false
+      }, this.backgroundChangeTime * 1000)
     })
   },
   methods: {
@@ -75,13 +114,13 @@ export default {
       }, this.waitTime)
     },
     login () {
-      axiosWrapper('/logincheck', 'post', {username: this.username, password: this.password}).then(data => {
+      this.loading = true
+      axiosWrapper('/logincheck', 'post', {type: this.type, username: this.username, password: this.password}).then(data => {
         console.log(data)
         this.$store.commit('SET_TOKEN', data.data.token)
         this.$store.commit('SET_USER', data.data.username)
         this.$message.success('login Success!')
         clearInterval(this.timer)
-        this.loading = true
         setTimeout(() => {
           this.$router.push({name: 'lobby'})
         }, 1000)
@@ -99,7 +138,6 @@ export default {
 .login {
   width: 100%;
   height: 100%;
-  min-height: 30rem;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -107,13 +145,34 @@ export default {
 }
 
 .container {
-  background-color: rgba(200,200,200,0.5);
   width: 26rem;
   height: 40rem;
   position: relative;
   z-index: 1;
   overflow: hidden;
   box-shadow: 0 0 0 0.06rem hsla(0, 0%, 100%, .3) inset, 0 .5em 1em rgba(0, 0, 0, 0.6);
+}
+
+.containerBackground{
+  position: absolute;
+  height: 96rem;
+  width: 96rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: -1;
+}
+
+.containerBackgroundCircle{
+  background-color: rgba(200,200,200,0.5);
+  border-radius: 50%;
+  width: 0;
+  height: 0;
+}
+
+.containerBackgroundCircleFull{
+  width: 100%;
+  height: 100%;
 }
 
 .welcome {
@@ -150,6 +209,7 @@ export default {
 .register span:hover{
   color: #60BEFF;
 }
+
 @media (max-width: 48rem) {
   .el-header {
     color: black;

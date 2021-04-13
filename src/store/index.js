@@ -8,11 +8,12 @@ Vue.use(Vuex)
 const state = {
   username: window.sessionStorage.getItem('username'),
   token: window.sessionStorage.getItem('token'),
-  roomNumber: 0,
-  totalGames: 0,
-  winGames: 0,
+  roomNumber: null,
+  totalGames: null,
+  winGames: null,
   opponent: null,
-  opponentScore: 0
+  opponentScore: null,
+  questions: []
 }
 
 const actions = {

@@ -1,8 +1,9 @@
 <template>
   <div id="app">
     <background-music></background-music>
-    <circles v-if="showCircles"></circles>
+<!--    <circles v-if="showCircles"></circles>-->
     <router-view/>
+
   </div>
 </template>
 
@@ -47,6 +48,10 @@ export default {
   width: 100vw;
   height: 100vh;
   user-select: none;
-  background-color: rgb(255,245,247);
+  /*background-color: rgb(255,245,247);*/
+  background-image: url("/static/backgrounds/stardust.jpg");
+  background-position: center;
+  background-size: cover;
+  min-height: 40rem;
 }
 </style>

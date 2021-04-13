@@ -3,7 +3,7 @@ const Mock = require('mockjs')
 
 // 设置拦截ajax请求的相应时间
 Mock.setup({
-  timeout: '200-600'
+  timeout: '3000'
 })
 
 let configArray = []
