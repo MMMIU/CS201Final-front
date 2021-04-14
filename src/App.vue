@@ -1,15 +1,14 @@
 <template>
   <div id="app">
-    <background-music></background-music>
-<!--    <circles v-if="showCircles"></circles>-->
+<!--    <background-music></background-music>-->
+    <background-stars></background-stars>
     <router-view/>
-
   </div>
 </template>
 
 <script>
-import circles from './components/background/backgroundCircles'
 import backgroundMusic from './components/background/backgroundMusic'
+import backgroundStars from './components/background/backgroundStars'
 export default {
   name: 'App',
   data () {
@@ -18,7 +17,7 @@ export default {
       showCircles: this.screenWidth > this.MOBILE
     }
   },
-  components: {circles, backgroundMusic},
+  components: {backgroundStars, backgroundMusic},
   created () {
     window.addEventListener('resize', () => {
       this.screenWidth = document.body.clientWidth
@@ -27,6 +26,12 @@ export default {
   },
   mounted () {
     this.showCircles = this.screenWidth > this.MOBILE
+    window.onpopstate = () => {
+      console.log(this.$store.state.allowBack)
+      if (!this.$store.state.allowBack) {
+        history.go(1)
+      }
+    }
   },
   watch: {
     // '$route.path' (val) {
@@ -47,11 +52,7 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   width: 100vw;
   height: 100vh;
-  user-select: none;
-  /*background-color: rgb(255,245,247);*/
-  background-image: url("/static/backgrounds/stardust.jpg");
-  background-position: center;
-  background-size: cover;
   min-height: 40rem;
+  user-select: none;
 }
 </style>

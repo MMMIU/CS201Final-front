@@ -63,6 +63,7 @@ router.beforeEach((to, from, next) => {
   if (to.meta.requireAuth) { // 判断该路由是否需要登录权限
     if (token) { // 通过vuex state获取当前的token是否存在
       next()
+      checkAllowBack(to)
     } else {
       console.log('该页面需要登陆')
       next({
@@ -71,7 +72,21 @@ router.beforeEach((to, from, next) => {
     }
   } else {
     next()
+    checkAllowBack(to)
   }
 })
 
+function checkAllowBack (to) {
+  let allowBack = true
+  if (to.meta.allowBack !== undefined) {
+    allowBack = to.meta.allowBack
+  }
+  if (!allowBack) {
+    console.log('back prevented')
+    history.pushState(null, null, location.href)
+  }
+  store.commit('UPDATE_ALLOWBACK', {
+    allowBack: allowBack
+  })
+}
 export default router

@@ -4,15 +4,11 @@ const mutations = {
     window.sessionStorage.setItem('token', data)
   },
   SET_USER: (state, data) => {
-    // 把用户名存起来
     state.username = data
     window.sessionStorage.setItem('username', data)
   },
   SET_ROOM_NUMBER: (state, data) => {
     state.roomNumber = data
-  },
-  CLEAR_ROOM_NUMBER: (state) => {
-    state.roomNumber = null
   },
   SET_TOTAL_GAMES: (state, data) => {
     state.totalGames = data
@@ -23,12 +19,6 @@ const mutations = {
   SET_OPPONENT: (state, data) => {
     state.opponent = data
   },
-  CLEAR_OPPONENT: (state) => {
-    state.opponent = null
-  },
-  SET_OPPONENT_SCORE: (state, data) => {
-    state.opponentScore = data
-  },
   SET_QUESTIONS: (state, data) => {
     state.questions = data
   },
@@ -37,8 +27,11 @@ const mutations = {
     state.opponent = null
     state.opponentScore = null
   },
+  UPDATE_ALLOWBACK: (state, data) => {
+    state.allowBack = data.allowBack
+    window.sessionStorage.setItem('token', data)
+  },
   LOGOUT: (state) => {
-    // 登出的时候要清除token
     state.token = null
     state.username = null
     window.sessionStorage.removeItem('token')

@@ -37,15 +37,26 @@ export default {
 
 <style scoped>
 .musicPanel{
-  width: 30px;
-  height: 30px;
+  width: 45px;
+  height: 45px;
   position: fixed;
-  top: 0;
-  right: 0;
+  bottom: 80px;
+  right: 30px;
   font-size: 30px;
   z-index: 99999;
 }
 #playIcon{
   cursor: pointer;
+  width: 100%;
+  height: 100%;
+  /*background-color: white;*/
+  border-radius: 50%;
+  line-height: 45px;
+  text-align: center;
+  font-size: 150%;
+  transition: 0.5s;
+}
+#playIcon:hover{
+  color: #409EFF;
 }
 </style>

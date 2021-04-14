@@ -6,12 +6,12 @@
           Welcome
         </el-header>
         <el-main style="width: 80%">
-          <el-input v-model="username" :placeholder="usernamePrompt"></el-input>
-          <el-input type="password" :placeholder="passwordPrompt" v-model="password" style="margin-top: 1rem"
+          <el-input v-model="ruleForm.username" :placeholder="usernamePrompt"></el-input>
+          <el-input type="password" :placeholder="passwordPrompt" v-model="ruleForm.password" style="margin-top: 1rem"
                     show-password></el-input>
-          <el-input v-show="showConfirmInput" type="password" placeholder="Confirm Password" v-model="password" style="margin-top: 1rem"
+          <el-input v-show="ruleForm.type==='register'" type="password" placeholder="Confirm Password" v-model="ruleForm.changePassword" style="margin-top: 1rem"
                     show-password></el-input>
-          <el-button type="primary" :disabled="loginButtonEnabled" style="width: 100%;margin-top: 1rem" @click="login">{{ type | upperCase}}
+          <el-button type="primary" :disabled="loginButtonEnabled" style="width: 100%;margin-top: 1rem" @click="login">{{ ruleForm.type | upperCase}}
           </el-button>
         </el-main>
         <el-footer class="register">{{registerPrompt}}
@@ -32,20 +32,48 @@ const REGISTER = 'register'
 export default {
   name: 'Login',
   data () {
+    let validatePass = (rule, value, callback) => {
+      if (value === '') {
+        callback(new Error('请输入密码'))
+      } else {
+        if (this.ruleForm.checkPass !== '') {
+          this.$refs.ruleForm.validateField('checkPass')
+        }
+        callback()
+      }
+    }
+    let validatePass2 = (rule, value, callback) => {
+      if (value === '') {
+        callback(new Error('请再次输入密码'))
+      } else if (value !== this.ruleForm.pass) {
+        callback(new Error('两次输入密码不一致!'))
+      } else {
+        callback()
+      }
+    }
     return {
       screenWidth: document.body.clientWidth,
       usernamePrompt: 'username',
       passwordPrompt: 'Password',
       registerPrompt: 'Don\'t have an account?',
       registerButtonText: 'Register',
-      username: '',
-      password: '',
-      checkCode: '',
-      timer: null,
-      type: LOGIN,
+      ruleForm: {
+        type: LOGIN,
+        username: '',
+        password: '',
+        changePassword: ''
+      },
+      rules: {
+        pass: [
+          { validator: validatePass, trigger: 'blur' }
+        ],
+        checkPass: [
+          { validator: validatePass2, trigger: 'blur' }
+        ]
+      },
       loginButtonEnabled: false,
       loading: false,
-      showConfirmInput: false,
+      showConfirmInput: true,
       waitTime: 500,
       mouseHovering: false,
       backgroundChangeTime: 0.5,
@@ -95,14 +123,14 @@ export default {
   methods: {
     changeMode () {
       this.loading = true
-      if (this.type === LOGIN) {
-        this.type = REGISTER
+      if (this.ruleForm.type === LOGIN) {
+        this.ruleForm.type = REGISTER
         this.usernamePrompt = 'New username'
         this.passwordPrompt = 'New Password'
         this.registerButtonText = 'Login'
         this.registerPrompt = 'Already have an account?'
       } else {
-        this.type = LOGIN
+        this.ruleForm.type = LOGIN
         this.usernamePrompt = 'username'
         this.passwordPrompt = 'Password'
         this.registerButtonText = 'Register'
@@ -115,18 +143,14 @@ export default {
     },
     login () {
       this.loading = true
-      axiosWrapper('/logincheck', 'post', {type: this.type, username: this.username, password: this.password}).then(data => {
-        console.log(data)
+      axiosWrapper('/logincheck', 'post', {form: this.ruleForm}).then(data => {
         this.$store.commit('SET_TOKEN', data.data.token)
         this.$store.commit('SET_USER', data.data.username)
         this.$message.success('login Success!')
-        clearInterval(this.timer)
-        setTimeout(() => {
-          this.$router.push({name: 'lobby'})
-        }, 1000)
+        this.$router.push({name: 'lobby'})
       }).catch(e => {
         if (e) {
-          this.$message.error(this.type + ' Failed!')
+          this.$message.error(this.ruleForm.type + ' Failed!')
         }
       })
     }

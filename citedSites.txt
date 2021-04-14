@@ -6,3 +6,12 @@ https://www.cnblogs.com/yuer20180726/p/11141288.html
 
 利用@media screen实现网页布局的自适应（响应式布局）
 https://blog.csdn.net/gtlishujie/article/details/81975157
+
+Element.ui【走马灯】实现用手指可以左右滑动
+https://blog.csdn.net/weixin_44296929/article/details/108512751
+
+vue特效70行代码，一片动态星空
+https://www.bilibili.com/video/BV1EJ411e7sr
+
+CSS技巧收集——毛玻璃效果
+https://www.cnblogs.com/ghost-xyx/p/5677168.html

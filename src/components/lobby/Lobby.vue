@@ -1,17 +1,25 @@
 <template>
-<div class="lobby" v-loading="loading"   :element-loading-text="roomNumberText" element-loading-background="rgba(250, 250, 250, 0.8)">
-  <div class="welcome">Welcome {{username}} {{token}}</div>
-  <div id="lobbyContainer" v-if="!onMobile" >
-      <el-carousel id="elCarousel" trigger="click" :interval="5000" type="card" v-on:change="changeIndex">
+<div class="lobby"
+     v-loading="loading"
+     :element-loading-text="loadingText"
+     element-loading-background="rgba(250, 250, 250, 0.8)">
+  <div class="welcome">Welcome, {{this.username}}</div>
+  <div id="lobbyContainer">
+      <el-carousel id="elCarousel"
+                   trigger="click"
+                   :interval="5000"
+                   :type="onMobile?'':'card'"
+                   indicator-position="outside"
+                   arrow="always"
+                   v-on:change="changeIndex"
+                   v-if="showCards"
+                   ref="carousel"
+                   :autoplay="autoPlay"
+      >
         <el-carousel-item v-for="(item,index) in optionList" :key="item">
           <h3 @click="goOption(index)">{{ item }}</h3>
         </el-carousel-item>
       </el-carousel>
-  </div>
-  <div class="mobile" v-if="onMobile">
-    <div class="profile align-center-vertical" @click="goProfile">Profile</div>
-    <div class="game align-center-vertical" @click="goGameRoom">New Game</div>
-    <div class="join align-center-vertical" @click="openJoinBox">Join</div>
   </div>
 </div>
 </template>
@@ -30,12 +38,14 @@ export default {
       screenWidth: document.body.clientWidth,
       screenHeight: document.body.clientHeight,
       roomNumber: this.$store.state.roomNumber,
-      roomNumberText: null,
+      loadingText: null,
       joinButtonEnabled: false,
       onMobile: (document.body.clientWidth <= this.MOBILE),
       optionList: ['Start', 'Join', 'Profile', 'Create'],
       activeIndex: 0,
-      waitingTimer: null
+      waitingTimer: null,
+      showCards: true,
+      autoPlay: true
     }
   },
   created () {
@@ -45,33 +55,42 @@ export default {
         this.screenHeight = document.body.clientHeight
         if (this.screenWidth > this.MOBILE && this.onMobile) {
           this.onMobile = false
+          this.reloadCards()
         }
         if (this.screenWidth <= this.MOBILE && !this.onMobile) {
           this.onMobile = true
+          this.reloadCards()
         }
       })()
     })
   },
   mounted () {
     this.onMobile = document.body.clientWidth <= this.MOBILE
+    this.slideBanner()
   },
   methods: {
+    reloadCards () {
+      this.showCards = false
+      this.$nextTick(() => {
+        this.showCards = true
+      })
+    },
     changeIndex (val) {
       this.activeIndex = val
     },
     goOption (index) {
       if (index !== this.activeIndex) return
-      switch (this.activeIndex) {
-        case 0:
+      switch (this.optionList[this.activeIndex]) {
+        case 'Start':
           this.goGameRoom()
           break
-        case 1:
+        case 'Join':
           this.openJoinBox()
           break
-        case 2:
+        case 'Profile':
           this.goProfile()
           break
-        case 3:
+        case 'Create':
           this.createRoom()
           break
       }
@@ -89,6 +108,7 @@ export default {
     },
     goProfile () {
       this.loading = true
+      this.loadingText = 'Waiting for profile data...'
       axiosWrapper('/requestprofile', 'post', {type: 'join', token: this.token}).then(data => {
         this.$store.commit('SET_TOTAL_GAMES', data.data.totalGames)
         this.$store.commit('SET_WIN_GAMES', data.data.winGames)
@@ -97,11 +117,13 @@ export default {
       }).catch(e => {
         if (e) {
           this.$message.error('Failed!')
+          this.loading = false
         }
       })
     },
     goGameRoom () {
       this.loading = true
+      this.loadingText = 'Waiting for join...'
       axiosWrapper('/requestroom', 'post', {type: 'join', token: this.token, roomNumber: this.roomNumber}).then(data => {
         this.$store.commit('SET_ROOM_NUMBER', data.data.roomNumber)
         this.$store.commit('SET_OPPONENT', data.data.opponent)
@@ -111,6 +133,7 @@ export default {
       }).catch(e => {
         if (e) {
           this.$message.error('Join Failed!')
+          this.loading = false
         }
       })
     },
@@ -118,17 +141,18 @@ export default {
       this.loading = true
       axiosWrapper('/requestroom', 'post', {type: 'create', token: this.token}).then(data => {
         this.$store.commit('SET_ROOM_NUMBER', data.data.roomNumber)
-        this.roomNumberText = 'Your room number is ' + data.data.roomNumber + '. Waiting for another player...'
+        this.loadingText = 'Your room number is ' + data.data.roomNumber + '. Waiting for another player...'
         this.waitingForPlayer()
       }).catch(e => {
         if (e) {
           this.$message.error('Create Failed!')
+          this.loading = false
         }
       })
     },
     waitingForPlayer () {
       this.waitingTimer = setInterval(() => {
-        axiosWrapper('/requestroom', 'post', {type: 'create', token: this.token}).then(data => {
+        axiosWrapper('/requestroom', 'post', {type: 'create', token: this.token, roomNumber: this.roomNumber}).then(data => {
           if (!data.data.opponent) return
           if (this.$store.state.opponent) return
           clearInterval(this.waitingTimer)
@@ -138,6 +162,42 @@ export default {
           this.$message.success('Assign Success!')
         })
       }, 100)
+    },
+    slideBanner () {
+      let box = document.querySelector('.el-carousel__container')
+      let startPoint = 0
+      let stopPoint = 0
+
+      let resetPoint = function () {
+        startPoint = 0
+        stopPoint = 0
+      }
+
+      let that = this
+      box.addEventListener('touchstart', function (e) {
+        that.autoPlay = false
+        startPoint = e.changedTouches[0].pageX
+      })
+
+      box.addEventListener('touchmove', function (e) {
+        stopPoint = e.changedTouches[0].pageX
+      })
+
+      box.addEventListener('touchend', function (e) {
+        if (stopPoint === 0 || startPoint - stopPoint === 0) {
+          resetPoint()
+          return
+        }
+        if (startPoint - stopPoint > 0) {
+          resetPoint()
+          that.$refs.carousel.next()
+          return
+        }
+        if (startPoint - stopPoint < 0) {
+          resetPoint()
+          that.$refs.carousel.prev()
+        }
+      })
     }
   }
 
@@ -149,19 +209,18 @@ export default {
   width: 100%;
   height: 100%;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   user-select: none;
 }
-
 .welcome{
-  width: 100px;
-  height: 20px;
-  position: fixed;
-  top: 0;
-  left: 0;
+  width: 80%;
+  text-align: center;
+  font-size: 3rem;
+  color: antiquewhite;
+  margin-top: 50px;
 }
-
 #lobbyContainer {
   width: 80%;
   height: 40rem;
@@ -201,47 +260,5 @@ export default {
 }
 .el-carousel__item:nth-child(4n+3) {
   background-color: #32a973;
-}
-
-.mobile{
-  width: 100%;
-  height: 100%;
-  cursor: pointer;
-  font-size: 2rem;
-}
-
-.profile{
-  width: 100%;
-  height: calc(100% / 3);
-  background-color: #42b983;
-  transition: 0.3s;
-}
-.profile:hover{
-  color: antiquewhite;
-}
-.game{
-  width: 100%;
-  height: calc(100% / 3);
-  background-color: #60BEFF;
-  transition: 0.3s;
-}
-.game:hover{
-  color: antiquewhite;
-}
-.join{
-  width: 100%;
-  height: calc(100% / 3);
-  background-color: #409EFF;
-  transition: 0.3s;
-}
-.join:hover{
-  color: antiquewhite;
-}
-
-.align-center-vertical{
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  /*flex-direction: column;*/
 }
 </style>

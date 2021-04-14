@@ -1,7 +1,10 @@
 <template>
-  <div class="gameRoom">
-    <div class="statistic">Welcome {{username}} {{token}}</div>
-    <div class="container" v-loading="loading"  element-loading-background="rgba(250, 250, 250, 0.8)">
+  <div class="gameRoom" v-if="isRouterAlive">
+    <div class="container"
+         v-loading="loading"
+         element-loading-background="rgba(250, 250, 250, 0.8)"
+         :element-loading-text="loadingText"
+    >
       <div class="startCover" v-if="state===0"><div>{{countDown}}</div></div>
       <div class="endCover" v-if="state===2">
         <div id="endSlogan">{{ endSlogan }}</div>
@@ -13,7 +16,7 @@
         </div>
         <div id="endOptionsPanel">
           <el-button type="primary" style="width: 100%;margin-top: 1rem" @click="goBack">Back To Lobby</el-button>
-          <el-button type="primary" style="width: 100%;margin-top: 1rem" @click="goBack">Another Round</el-button>
+          <el-button type="primary" style="width: 100%;margin-top: 1rem" @click="newRound">Another Round</el-button>
         </div>
       </div>
       <el-container>
@@ -51,6 +54,8 @@
 </template>
 
 <script>
+import {axiosWrapper} from '../../api'
+
 const PREPARING = 0
 const ANSWERING = 1
 const FINISHING = 2
@@ -72,16 +77,25 @@ export default {
       answerTimer: null,
       question: null,
       options: null,
-      endSlogan: 'Win',
+      endSlogan: null,
       showScores: false,
       showEndOptions: false,
       loading: false,
+      loadingText: null,
       buttonDisabled: false,
       correctChoice: -1,
-      choice: -1
+      choice: -1,
+      isRouterAlive: true,
+      scoreGetTimer: null,
+      scoreGetCount: 0,
+      scoreUploaded: false
     }
   },
   mounted () {
+    // history.pushState(null, null, document.URL)
+    // window.addEventListener('popstate', function () {
+    //   history.pushState(null, null, document.URL)
+    // })
     this.answerTimeRemain = this.answerTime
     this.question = this.$store.state.questions[this.questionIndex - 1].question
     this.options = this.$store.state.questions[this.questionIndex - 1].options
@@ -102,6 +116,7 @@ export default {
           setTimeout(() => {
             this.state = ANSWERING
             this.questionCountDown()
+            this.getP2Score()
           }, 1000)
           clearInterval(timer)
         }
@@ -117,11 +132,18 @@ export default {
       }, 1000)
     },
     nextQuestion () {
+      if (!this.scoreUploaded) {
+        this.uploadScore()
+      }
       if (this.questionIndex >= this.$store.state.questions.length) {
-        this.state = FINISHING
-        this.finishMatch()
+        clearInterval(this.answerTimer)
+        this.answerTimer = null
+        this.loading = true
+        this.loadingText = 'Waiting for score update...'
+        this.finishMatchHelper()
         return
       }
+      this.scoreUploaded = false
       this.buttonDisabled = false
       this.questionIndex++
       this.question = this.$store.state.questions[this.questionIndex - 1].question
@@ -134,12 +156,63 @@ export default {
       if (index === this.correctChoice) {
         this.p1Score++
       }
+      this.scoreUploaded = true
+      this.uploadScore()
+    },
+    uploadScore () {
+      axiosWrapper('/requestScore', 'post',
+        {
+          type: 'uploadScore',
+          token: this.token,
+          index: this.questionIndex,
+          score: this.choice === this.correctChoice ? 1 : 0,
+          roomNumber: this.roomNumber
+        }).then(data => {
+        console.log('upload succeed')
+      }).catch(e => {
+        if (e) {
+          this.$message.error('Upload Score Failed!')
+        }
+      })
+    },
+    getP2Score () {
+      clearInterval(this.scoreGetTimer)
+      this.scoreGetTimer = setInterval(() => {
+        axiosWrapper('/requestScore', 'post',
+          {
+            type: 'getScore',
+            token: this.token,
+            roomNumber: this.roomNumber
+          }).then(data => {
+          this.p2Score = data.data.opponentScore
+          this.scoreGetCount = data.data.questionAnswered
+          console.log('get score succeed')
+          if (this.scoreGetCount >= this.$store.state.questions.length) {
+            clearInterval(this.scoreGetTimer)
+            this.finishMatchHelper()
+          }
+        }).catch(e => {
+          if (e) {
+            this.$message.error('Update score Failed!')
+            console.log(e)
+          }
+        })
+      }, 1000)
+    },
+    finishMatchHelper () {
+      setTimeout(() => {
+        this.finishMatch()
+      }, 1000)
     },
     finishMatch () {
+      if (this.answerTimer !== null) return
+      if (this.scoreGetCount < this.$store.state.questions.length) return
+      this.state = FINISHING
+      this.loading = false
       if (this.p1Score > this.p2Score) {
-        this.endSlogan = 'You Win!'
+        this.endSlogan = 'You Win'
       } else if (this.p1Score < this.p2Score) {
-        this.endSlogan = 'Butter Luck Next Time!'
+        this.endSlogan = 'You Lose'
       } else {
         this.endSlogan = 'Tie!'
       }
@@ -168,6 +241,45 @@ export default {
           endOptionsPanel.style.marginTop = '0'
         }, 500)
       }
+    },
+    newRound () {
+      this.loading = true
+      this.loadingText = this.loadingText = 'Waiting for join...'
+      axiosWrapper('/requestroom', 'post', {type: 'join', token: this.token}).then(data => {
+        this.$store.commit('SET_ROOM_NUMBER', data.data.roomNumber)
+        this.$store.commit('SET_OPPONENT', data.data.opponent)
+        this.$store.commit('SET_QUESTIONS', data.data.questions)
+        this.$message.success('Join Success!')
+        this.reload()
+      }).catch(e => {
+        if (e) {
+          this.$message.error('Join Failed!')
+          this.loading = false
+        }
+      })
+    },
+    reload () {
+      this.isRouterAlive = false
+      this.answerTimeRemain = this.answerTime
+      this.questionIndex = 1
+      this.question = this.$store.state.questions[this.questionIndex - 1].question
+      this.options = this.$store.state.questions[this.questionIndex - 1].options
+      this.opponent = this.$store.state.opponent
+      this.correctChoice = this.$store.state.questions[this.questionIndex - 1].answer
+      console.log(this.correctChoice)
+      this.countDown = 3
+      this.state = PREPARING
+      this.loading = false
+      this.loadingText = null
+      this.p1Score = 0
+      this.p2Score = 0
+      this.choice = -1
+      this.buttonDisabled = false
+      this.scoreGetCount = 0
+      clearInterval(this.scoreGetTimer)
+      clearInterval(this.answerTimer)
+      this.startCountDown()
+      this.$nextTick(() => (this.isRouterAlive = true))
     }
   }
 }
@@ -181,11 +293,6 @@ export default {
   justify-content: center;
   align-items: center;
   user-select: none;
-}
-.statistic{
-  position: fixed;
-  top: 0;
-  left: 0;
 }
 .startCover{
   width: 100%;
