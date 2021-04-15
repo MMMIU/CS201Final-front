@@ -57,15 +57,14 @@ const router = new Router({
   ]
 })
 
-// 注册全局钩子用来拦截导航
 router.beforeEach((to, from, next) => {
   const token = store.state.token
-  if (to.meta.requireAuth) { // 判断该路由是否需要登录权限
-    if (token) { // 通过vuex state获取当前的token是否存在
+  if (to.meta.requireAuth) {
+    if (token) {
       next()
       checkAllowBack(to)
     } else {
-      console.log('该页面需要登陆')
+      console.log('This page requires authentication.')
       next({
         path: '/'
       })

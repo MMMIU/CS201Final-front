@@ -2,7 +2,6 @@
   <div class="backgroundStars">
     <div id="starsContainer">
       <div v-for="item in numOfStars" class="star" :key="item" ref="star" :style="{animationDelay: Math.random() * 1.5 + 's', transform: 'scale('+ Math.random() * 1.5+')'}"></div>
-      <!--      :style="{marginLeft: Math.random() * 100 + '%', marginTop: Math.random() * Math.random() * 80 + '%', animationDelay: Math.random() * 1.5 + 's', transform: 'scale('+ Math.random() * 1.5+')'}"-->
     </div>
   </div>
 </template>
@@ -18,14 +17,14 @@ export default {
   mounted () {
     let starArr = this.$refs.star
     starArr.forEach(item => {
-      let speed = 0.2 + Math.random()
-      let thisDistance = this.distance + (Math.random() * 300)
-      item.style.transformOrigin = `0 0 ${thisDistance}px`
+      let scale = 0.2 + Math.random()
+      let starDistance = this.distance + (Math.random() * 300)
+      item.style.transformOrigin = `0 0 ${starDistance}px`
       item.style.transform = `
-      translate3d(0, 0, -${thisDistance}px)
+      translate3d(0, 0, -${starDistance}px)
       rotateY(${(Math.random() * 360)}deg)
-      rotateX(${(Math.random() * -50)}deg)
-      scale(${speed}, ${speed})`
+      rotateX(${(Math.random() * -60)}deg)
+      scale(${scale})`
     })
   }
 }
@@ -42,25 +41,23 @@ export default {
 }
 @keyframes rotate {
   0% {
-    transform: rotateZ(20deg) rotateX(-40deg) rotateY(0);
+    transform: rotateZ(0deg) rotateX(40deg) rotateY(0);
   }
   100% {
-    transform: rotateZ(20deg) rotateX(-40deg) rotateY(-360deg);
+    transform: rotateZ(0deg) rotateX(40deg) rotateY(-360deg);
   }
 }
 
 #starsContainer {
   transform-style: preserve-3d;
   position: absolute;
-  perspective-origin: 50% 100%;
   left: 50%;
-  animation: rotate 100s infinite linear;
-  transform: rotateZ(0deg) rotateX(-40deg) rotateY(0);
-  bottom: 20%;
+  animation: rotate 200s infinite linear;
+  top: 0;
 }
 .star {
-  width: 2px;
-  height: 2px;
+  width: 3px;
+  height: 3px;
   background: #f7f7b8;
   position: absolute;
   top: 0;

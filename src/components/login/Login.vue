@@ -3,23 +3,31 @@
     <div  class="container">
       <el-container id="loginContainer" v-loading="loading" class="userEnter" element-loading-background="rgba(250, 250, 250, 0.8)">
         <el-header height="13rem" class="welcome">
-          Welcome
+          {{ type | upperCase }}
         </el-header>
         <el-main style="width: 80%">
-          <el-input v-model="ruleForm.username" :placeholder="usernamePrompt"></el-input>
-          <el-input type="password" :placeholder="passwordPrompt" v-model="ruleForm.password" style="margin-top: 1rem"
-                    show-password></el-input>
-          <el-input v-show="type==='register'" type="password" placeholder="Confirm Password" v-model="checkPassword" style="margin-top: 1rem"
-                    show-password></el-input>
-          <el-button type="primary" :disabled="loginButtonEnabled" style="width: 100%;margin-top: 1rem" @click="login">{{ type | upperCase}}
-          </el-button>
+          <el-form>
+            <el-form-item>
+              <el-input v-model="ruleForm.username" :placeholder="usernamePrompt"></el-input>
+            </el-form-item>
+            <el-form-item prop="password">
+              <el-input type="password" :placeholder="passwordPrompt" v-model="ruleForm.password" show-password></el-input>
+            </el-form-item>
+            <el-form-item prop="checkPassword">
+              <el-input v-if="type==='register'" type="password" placeholder="Confirm Password" v-model="checkPassword" show-password></el-input>
+            </el-form-item>
+            <el-form-item label="">
+              <el-button type="primary" :disabled="loginButtonEnabled"  @click="login" style="width: 100%
+">{{ type | upperCase}}</el-button>
+            </el-form-item>
+          </el-form>
         </el-main>
         <el-footer class="register">{{registerPrompt}}
           <span @click="changeMode">{{registerButtonText}}</span>
         </el-footer>
       </el-container>
       <div id="containerBackground" class="containerBackground">
-        <div id = "containerBackgroundCircle" class="containerBackgroundCircle" :class="{'containerBackgroundCircleFull':mouseHovering}"></div>
+        <div id = "containerBackgroundCircle" class="containerBackgroundCircle" :style="{width: mouseHovering?'100%':0, height: mouseHovering?'100%':0}"></div>
       </div>
     </div>
   </div>
@@ -36,7 +44,7 @@ export default {
       if (value === '') {
         callback(new Error('请输入密码'))
       } else {
-        if (this.ruleForm.checkPass !== '') {
+        if (this.checkPassword !== '') {
           this.$refs.ruleForm.validateField('checkPass')
         }
         callback()
@@ -45,7 +53,7 @@ export default {
     let validatePass2 = (rule, value, callback) => {
       if (value === '') {
         callback(new Error('请再次输入密码'))
-      } else if (value !== this.ruleForm.pass) {
+      } else if (value !== this.ruleForm.password) {
         callback(new Error('两次输入密码不一致!'))
       } else {
         callback()
@@ -64,10 +72,10 @@ export default {
       },
       checkPassword: '',
       rules: {
-        pass: [
+        password: [
           { validator: validatePass, trigger: 'blur' }
         ],
-        checkPass: [
+        checkPassword: [
           { validator: validatePass2, trigger: 'blur' }
         ]
       },
@@ -82,6 +90,7 @@ export default {
     }
   },
   created () {
+    this.$store.commit('LOGOUT')
     window.addEventListener('resize', () => {
       return (() => {
         this.screenWidth = document.body.clientWidth
@@ -190,13 +199,6 @@ export default {
 .containerBackgroundCircle{
   background-color: rgba(200,200,200,0.5);
   border-radius: 50%;
-  width: 0;
-  height: 0;
-}
-
-.containerBackgroundCircleFull{
-  width: 100%;
-  height: 100%;
 }
 
 .welcome {
@@ -235,9 +237,6 @@ export default {
 }
 
 @media (max-width: 48rem) {
-  .el-header {
-    color: black;
-  }
 
   .container {
     width: 100%;

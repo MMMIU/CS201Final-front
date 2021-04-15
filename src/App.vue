@@ -27,16 +27,12 @@ export default {
   mounted () {
     this.showCircles = this.screenWidth > this.MOBILE
     window.onpopstate = () => {
-      console.log(this.$store.state.allowBack)
       if (!this.$store.state.allowBack) {
         history.go(1)
       }
     }
   },
   watch: {
-    // '$route.path' (val) {
-    //   this.useCircles = (val !== '/login')
-    // },
     screenWidth (val) {
       this.screenWidth = val
       this.showCircles = val > this.MOBILE

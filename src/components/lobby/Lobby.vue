@@ -4,7 +4,7 @@
      :element-loading-text="loadingText"
      element-loading-background="rgba(250, 250, 250, 0.8)">
   <div class="welcome">Welcome, {{this.username}}</div>
-  <div id="lobbyContainer">
+  <div class="lobbyContainer">
       <el-carousel id="elCarousel"
                    trigger="click"
                    :interval="5000"
@@ -20,6 +20,7 @@
           <h3 @click="goOption(index)">{{ item }}</h3>
         </el-carousel-item>
       </el-carousel>
+    <el-button type="danger" @click="logOut">Log Out</el-button>
   </div>
 </div>
 </template>
@@ -35,8 +36,6 @@ export default {
       username: this.$store.state.username,
       token: this.$store.state.token,
       loading: false,
-      screenWidth: document.body.clientWidth,
-      screenHeight: document.body.clientHeight,
       roomNumber: this.$store.state.roomNumber,
       loadingText: null,
       joinButtonEnabled: false,
@@ -51,13 +50,11 @@ export default {
   created () {
     window.addEventListener('resize', () => {
       return (() => {
-        this.screenWidth = document.body.clientWidth
-        this.screenHeight = document.body.clientHeight
-        if (this.screenWidth > this.MOBILE && this.onMobile) {
+        if (document.body.clientWidth > this.MOBILE && this.onMobile) {
           this.onMobile = false
           this.reloadCards()
         }
-        if (this.screenWidth <= this.MOBILE && !this.onMobile) {
+        if (document.body.clientWidth <= this.MOBILE && !this.onMobile) {
           this.onMobile = true
           this.reloadCards()
         }
@@ -66,7 +63,7 @@ export default {
   },
   mounted () {
     this.onMobile = document.body.clientWidth <= this.MOBILE
-    this.slideBanner()
+    this.allowSliding()
   },
   methods: {
     reloadCards () {
@@ -163,8 +160,8 @@ export default {
         })
       }, 100)
     },
-    slideBanner () {
-      let box = document.querySelector('.el-carousel__container')
+    allowSliding () {
+      let box = document.getElementById('elCarousel')
       let startPoint = 0
       let stopPoint = 0
 
@@ -183,7 +180,7 @@ export default {
         stopPoint = e.changedTouches[0].pageX
       })
 
-      box.addEventListener('touchend', function (e) {
+      box.addEventListener('touchend', function () {
         if (stopPoint === 0 || startPoint - stopPoint === 0) {
           resetPoint()
           return
@@ -197,6 +194,17 @@ export default {
           resetPoint()
           that.$refs.carousel.prev()
         }
+      })
+    },
+    logOut () {
+      this.$confirm('Are you sure log out?', 'Log Out', {
+        confirmButtonText: 'Yes',
+        cancelButtonText: 'Cancel'
+      }).then(() => {
+        this.$store.commit('LOGOUT')
+        this.$router.push({name: 'login'})
+      }).catch((e) => {
+        if (e) console.log('Log out box canceled.')
       })
     }
   }
@@ -221,24 +229,27 @@ export default {
   color: antiquewhite;
   margin-top: 50px;
 }
-#lobbyContainer {
+.lobbyContainer {
   width: 80%;
   height: 40rem;
   z-index: 1;
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-direction: column;
 }
-
-.el-carousel{
+.lobbyContainer .el-button{
+  margin-top: 20px;
+}
+.lobbyContainer .el-carousel{
   width: 80%;
 }
 
-.el-carousel__item{
+.lobbyContainer .el-carousel__item{
   border-radius: 10px;
 }
 
-.el-carousel__item h3 {
+.lobbyContainer .el-carousel__item h3 {
   color: #475669;
   font-size: 5rem;
   opacity: 0.75;
@@ -247,18 +258,19 @@ export default {
   text-align: center;
 }
 
-.el-carousel__item:nth-child(4n) {
+.lobbyContainer .el-carousel__item:nth-child(4n) {
   background-color: #60BEFF;
 }
 
-.el-carousel__item:nth-child(4n+1) {
+.lobbyContainer .el-carousel__item:nth-child(4n+1) {
   background-color: #409EFF;
 }
 
-.el-carousel__item:nth-child(4n+2) {
+.lobbyContainer .el-carousel__item:nth-child(4n+2) {
   background-color: #42b983;
 }
-.el-carousel__item:nth-child(4n+3) {
+
+.lobbyContainer .el-carousel__item:nth-child(4n+3) {
   background-color: #32a973;
 }
 </style>
