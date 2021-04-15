@@ -152,7 +152,7 @@ export default {
     },
     waitingForPlayer () {
       this.waitingTimer = setInterval(() => {
-        axiosWrapper('/requestroom', 'post', {type: 'create', token: this.token, roomNumber: this.roomNumber}).then(data => {
+        axiosWrapper('/requestroom', 'post', {type: 'waiting', token: this.token, roomNumber: this.roomNumber}).then(data => {
           if (!data.data.opponent) return
           if (this.$store.state.opponent) return
           clearInterval(this.waitingTimer)

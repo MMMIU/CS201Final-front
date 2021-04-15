@@ -1,6 +1,5 @@
 let profileDemo = {
   token: 1234567890,
-  username: 'MMMIU',
   totalGames: 100,
   winGames: 50
 }

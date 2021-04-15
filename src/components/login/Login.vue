@@ -9,9 +9,9 @@
           <el-input v-model="ruleForm.username" :placeholder="usernamePrompt"></el-input>
           <el-input type="password" :placeholder="passwordPrompt" v-model="ruleForm.password" style="margin-top: 1rem"
                     show-password></el-input>
-          <el-input v-show="ruleForm.type==='register'" type="password" placeholder="Confirm Password" v-model="ruleForm.changePassword" style="margin-top: 1rem"
+          <el-input v-show="type==='register'" type="password" placeholder="Confirm Password" v-model="checkPassword" style="margin-top: 1rem"
                     show-password></el-input>
-          <el-button type="primary" :disabled="loginButtonEnabled" style="width: 100%;margin-top: 1rem" @click="login">{{ ruleForm.type | upperCase}}
+          <el-button type="primary" :disabled="loginButtonEnabled" style="width: 100%;margin-top: 1rem" @click="login">{{ type | upperCase}}
           </el-button>
         </el-main>
         <el-footer class="register">{{registerPrompt}}
@@ -57,12 +57,12 @@ export default {
       passwordPrompt: 'Password',
       registerPrompt: 'Don\'t have an account?',
       registerButtonText: 'Register',
+      type: LOGIN,
       ruleForm: {
-        type: LOGIN,
         username: '',
-        password: '',
-        changePassword: ''
+        password: ''
       },
+      checkPassword: '',
       rules: {
         pass: [
           { validator: validatePass, trigger: 'blur' }
@@ -123,14 +123,14 @@ export default {
   methods: {
     changeMode () {
       this.loading = true
-      if (this.ruleForm.type === LOGIN) {
-        this.ruleForm.type = REGISTER
+      if (this.type === LOGIN) {
+        this.type = REGISTER
         this.usernamePrompt = 'New username'
         this.passwordPrompt = 'New Password'
         this.registerButtonText = 'Login'
         this.registerPrompt = 'Already have an account?'
       } else {
-        this.ruleForm.type = LOGIN
+        this.type = LOGIN
         this.usernamePrompt = 'username'
         this.passwordPrompt = 'Password'
         this.registerButtonText = 'Register'
@@ -150,7 +150,7 @@ export default {
         this.$router.push({name: 'lobby'})
       }).catch(e => {
         if (e) {
-          this.$message.error(this.ruleForm.type + ' Failed!')
+          this.$message.error(this.type + ' Failed!')
         }
       })
     }
