@@ -106,7 +106,7 @@ export default {
     goProfile () {
       this.loading = true
       this.loadingText = 'Waiting for profile data...'
-      axiosWrapper('/requestprofile', 'post', {type: 'join', token: this.token}).then(data => {
+      axiosWrapper('/statistics', 'post', {token: this.token}).then(data => {
         this.$store.commit('SET_TOTAL_GAMES', data.data.totalGames)
         this.$store.commit('SET_WIN_GAMES', data.data.winGames)
         this.$router.push({name: 'profile'})
@@ -121,12 +121,12 @@ export default {
     goGameRoom () {
       this.loading = true
       this.loadingText = 'Waiting for join...'
-      axiosWrapper('/requestroom', 'post', {type: 'join', token: this.token, roomNumber: this.roomNumber}).then(data => {
+      axiosWrapper('/goBattle', 'post', {type: 'join', token: this.token, roomNumber: this.roomNumber}).then(data => {
         this.$store.commit('SET_ROOM_NUMBER', data.data.roomNumber)
         this.$store.commit('SET_OPPONENT', data.data.opponent)
         this.$store.commit('SET_QUESTIONS', data.data.questions)
         this.$message.success('Assign Success!')
-        this.$router.push({name: 'gameroom'})
+        this.$router.push({name: 'battle'})
       }).catch(e => {
         if (e) {
           this.$message.error('Join Failed!')
@@ -136,7 +136,7 @@ export default {
     },
     createRoom () {
       this.loading = true
-      axiosWrapper('/requestroom', 'post', {type: 'create', token: this.token}).then(data => {
+      axiosWrapper('/goBattle', 'post', {type: 'create', token: this.token}).then(data => {
         this.$store.commit('SET_ROOM_NUMBER', data.data.roomNumber)
         this.loadingText = 'Your room number is ' + data.data.roomNumber + '. Waiting for another player...'
         this.waitingForPlayer()
@@ -149,13 +149,13 @@ export default {
     },
     waitingForPlayer () {
       this.waitingTimer = setInterval(() => {
-        axiosWrapper('/requestroom', 'post', {type: 'waiting', token: this.token, roomNumber: this.roomNumber}).then(data => {
+        axiosWrapper('/goBattle', 'post', {type: 'waiting', token: this.token, roomNumber: this.roomNumber}).then(data => {
           if (!data.data.opponent) return
           if (this.$store.state.opponent) return
           clearInterval(this.waitingTimer)
           this.$store.commit('SET_OPPONENT', data.data.opponent)
           this.$store.commit('SET_QUESTIONS', data.data.questions)
-          this.$router.push({name: 'gameroom'})
+          this.$router.push({name: 'battle'})
           this.$message.success('Assign Success!')
         })
       }, 100)

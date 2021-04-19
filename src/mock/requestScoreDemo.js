@@ -16,7 +16,7 @@ function increase () {
   }, 10000)
 }
 export default {
-  'post|/requestScore': option => {
+  'post|/getScore': option => {
     increase()
     return {
       status: 200,

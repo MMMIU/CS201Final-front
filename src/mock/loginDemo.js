@@ -1,10 +1,10 @@
 let loginDemo = {
-  token: 1234567890,
-  username: 'MMMIU'
+  token: 1234567890
 }
 
 export default {
-  'post|/logincheck': (req, res) => {
+  'post|/authenticate': (req, res) => {
+    console.log(req)
     return {
       status: 200,
       data: loginDemo

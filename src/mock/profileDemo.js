@@ -5,7 +5,7 @@ let profileDemo = {
 }
 
 export default {
-  'post|/requestprofile': option => {
+  'post|/statistics': option => {
     return {
       status: 200,
       data: profileDemo

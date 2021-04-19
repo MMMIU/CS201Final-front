@@ -37,8 +37,8 @@ const router = new Router({
       }
     },
     {
-      path: '/gameroom',
-      name: 'gameroom',
+      path: '/battle',
+      name: 'battle',
       component: GameRoom,
       meta: {
         allowBack: false,

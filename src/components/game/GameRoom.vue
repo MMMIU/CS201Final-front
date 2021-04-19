@@ -5,13 +5,13 @@
          element-loading-background="rgba(250, 250, 250, 0.8)"
          :element-loading-text="loadingText"
     >
-      <div class="startCover" v-if="state===0"><div>{{countDown}}</div></div>
+      <div class="startCover" v-if="state===0"><div>{{startCountDownSecond}}</div></div>
       <div class="endCover" v-if="state===2">
         <div id="endSlogan">{{ endSlogan }}</div>
         <div id="endScorePanel">
           <div>
-            {{username}}: {{p1Score}}<br>
-            {{opponent}}: {{p2Score}}
+            {{user.name}}: {{user.score}}<br>
+            {{opponent}}: {{opponent.score}}
           </div>
         </div>
         <div id="endOptionsPanel">
@@ -22,13 +22,13 @@
       <el-container>
         <el-header class="scorePanel">
           <div id="p1" class="p1Progress playerScoreProgress"
-               :style="{width: Math.round((((p1Score+p2Score)>0?((5+p1Score)/(p1Score+p2Score+10)*100):50)))+'%'}">
-            <p>{{username}}</p>
-            <p>{{p1Score}}</p>
+               :style="{width: Math.round((((user.score+opponent.score)>0?((5+user.score)/(user.score+opponent.score+10)*100):50)))+'%'}">
+            <p>{{user.name}}</p>
+            <p>{{user.score}}</p>
           </div>
           <div id="p2" class="p2Progress playerScoreProgress">
-            <p>{{opponent}}</p>
-            <p>{{p2Score}}</p>
+            <p>{{opponent.name}}</p>
+            <p>{{opponent.score}}</p>
           </div>
         </el-header>
         <el-container>
@@ -36,14 +36,14 @@
             <div class="timerProgress" :style="{width: (answerTimeRemain/answerTime*100)+'%'}"></div>
           </el-header>
           <el-container class="questionPanel">
-            <el-header>{{ question }}</el-header>
+            <el-header>{{ question.content }}</el-header>
             <el-main class="optionPanel">
-              <el-button v-for="(option,index) in options"
+              <el-button v-for="(option,index) in question.options"
                          :id="'option'+index"
                          :disabled="buttonDisabled"
                          :key="option" @click="checkChoice(index)"
-                         :loading="buttonDisabled&&index===choice"
-                         :type="buttonDisabled?(index===choice?(choice===correctChoice?'success':'danger'):''):''"
+                         :loading="buttonDisabled&&index===user.choice"
+                         :type="buttonDisabled?(index===user.choice?(user.choice===question.correctChoice?'success':'danger'):''):''"
               >{{ option }}</el-button>
             </el-main>
           </el-container>
@@ -63,28 +63,36 @@ export default {
   name: 'GameRoom',
   data () {
     return {
-      username: this.$store.state.username,
-      token: this.$store.state.token,
       roomNumber: this.$store.state.roomNumber,
-      opponent: this.$store.state.opponent,
-      countDown: 3,
       state: PREPARING,
-      p1Score: 0,
-      p2Score: 0,
-      questionIndex: 1,
+      startCountDownSecond: 3,
+      user: {
+        token: this.$store.state.token,
+        name: this.$store.state.name,
+        score: 0,
+        answerFinished: false,
+        choice: -1
+      },
+      opponent: {
+        name: this.$store.state.opponent,
+        score: 0,
+        answerFinished: false
+      },
+      question: {
+        index: 1,
+        content: null,
+        options: null,
+        correctChoice: -1
+      },
       answerTime: 10,
       answerTimeRemain: 0,
       answerTimer: null,
-      question: null,
-      options: null,
       endSlogan: null,
       showScores: false,
       showEndOptions: false,
       loading: false,
       loadingText: null,
       buttonDisabled: false,
-      correctChoice: -1,
-      choice: -1,
       isRouterAlive: true,
       scoreGetTimer: null,
       scoreGetCount: 0,
@@ -92,17 +100,16 @@ export default {
     }
   },
   mounted () {
-    // history.pushState(null, null, document.URL)
-    // window.addEventListener('popstate', function () {
-    //   history.pushState(null, null, document.URL)
-    // })
     this.answerTimeRemain = this.answerTime
-    this.question = this.$store.state.questions[this.questionIndex - 1].question
-    this.options = this.$store.state.questions[this.questionIndex - 1].options
-    this.correctChoice = this.$store.state.questions[this.questionIndex - 1].answer
+    this.question.content = this.$store.state.questions[this.question.index - 1].question
+    this.question.options = this.$store.state.questions[this.question.index - 1].options
+    this.question.correctChoice = this.$store.state.questions[this.question.index - 1].answer
     this.startCountDown()
   },
   methods: {
+    init () {
+
+    },
     goBack () {
       clearInterval(this.answerTimer)
       this.$store.commit('CLEAR_ROOM')
@@ -110,9 +117,9 @@ export default {
     },
     startCountDown () {
       let timer = setInterval(() => {
-        this.countDown--
-        if (this.countDown <= 0) {
-          this.countDown = 'Start!'
+        this.startCountDownSecond--
+        if (this.startCountDownSecond <= 0) {
+          this.startCountDownSecond = 'Start!'
           setTimeout(() => {
             this.state = ANSWERING
             this.questionCountDown()
@@ -135,7 +142,7 @@ export default {
       if (!this.scoreUploaded) {
         this.uploadScore()
       }
-      if (this.questionIndex >= this.$store.state.questions.length) {
+      if (this.question.index >= this.$store.state.questions.length) {
         clearInterval(this.answerTimer)
         this.answerTimer = null
         this.loading = true
@@ -145,28 +152,26 @@ export default {
       }
       this.scoreUploaded = false
       this.buttonDisabled = false
-      this.questionIndex++
-      this.question = this.$store.state.questions[this.questionIndex - 1].question
-      this.options = this.$store.state.questions[this.questionIndex - 1].options
-      this.correctChoice = this.$store.state.questions[this.questionIndex - 1].answer
+      this.question.index++
+      this.question.content = this.$store.state.questions[this.question.index - 1].question
+      this.question.options = this.$store.state.questions[this.question.index - 1].options
+      this.question.correctChoice = this.$store.state.questions[this.question.index - 1].answer
     },
     checkChoice (index) {
-      this.choice = index
+      this.user.choice = index
       this.buttonDisabled = true
-      if (index === this.correctChoice) {
-        this.p1Score++
+      if (index === this.question.correctChoice) {
+        this.user.score++
       }
       this.scoreUploaded = true
       this.uploadScore()
     },
     uploadScore () {
-      axiosWrapper('/requestScore', 'post',
+      axiosWrapper('/uploadScore', 'post',
         {
-          type: 'uploadScore',
           token: this.token,
-          index: this.questionIndex,
-          score: this.choice === this.correctChoice ? 1 : 0,
-          roomNumber: this.roomNumber
+          index: this.question.index,
+          score: this.user.choice === this.question.correctChoice ? 1 : 0
         }).then(data => {
         console.log('upload succeed')
       }).catch(e => {
@@ -178,13 +183,11 @@ export default {
     getP2Score () {
       clearInterval(this.scoreGetTimer)
       this.scoreGetTimer = setInterval(() => {
-        axiosWrapper('/requestScore', 'post',
+        axiosWrapper('/getScore', 'post',
           {
-            type: 'getScore',
-            token: this.token,
-            roomNumber: this.roomNumber
+            token: this.token
           }).then(data => {
-          this.p2Score = data.data.opponentScore
+          this.opponent.score = data.data.opponentScore
           this.scoreGetCount = data.data.questionAnswered
           console.log('get score succeed')
           if (this.scoreGetCount >= this.$store.state.questions.length) {
@@ -209,9 +212,9 @@ export default {
       if (this.scoreGetCount < this.$store.state.questions.length) return
       this.state = FINISHING
       this.loading = false
-      if (this.p1Score > this.p2Score) {
+      if (this.user.score > this.opponent.score) {
         this.endSlogan = 'You Win'
-      } else if (this.p1Score < this.p2Score) {
+      } else if (this.user.score < this.opponent.score) {
         this.endSlogan = 'You Lose'
       } else {
         this.endSlogan = 'Tie!'
@@ -261,19 +264,18 @@ export default {
     reload () {
       this.isRouterAlive = false
       this.answerTimeRemain = this.answerTime
-      this.questionIndex = 1
-      this.question = this.$store.state.questions[this.questionIndex - 1].question
-      this.options = this.$store.state.questions[this.questionIndex - 1].options
+      this.question.index = 1
+      this.question.content = this.$store.state.questions[this.question.index - 1].question
+      this.question.options = this.$store.state.questions[this.question.index - 1].options
       this.opponent = this.$store.state.opponent
-      this.correctChoice = this.$store.state.questions[this.questionIndex - 1].answer
-      console.log(this.correctChoice)
-      this.countDown = 3
+      this.question.correctChoice = this.$store.state.questions[this.question.index - 1].answer
+      this.startCountDownSecond = 3
       this.state = PREPARING
       this.loading = false
       this.loadingText = null
-      this.p1Score = 0
-      this.p2Score = 0
-      this.choice = -1
+      this.user.score = 0
+      this.opponent.score = 0
+      this.user.choice = -1
       this.buttonDisabled = false
       this.scoreGetCount = 0
       clearInterval(this.scoreGetTimer)

@@ -6,18 +6,18 @@
           {{ type | upperCase }}
         </el-header>
         <el-main style="width: 80%">
-          <el-form>
+          <el-form :rules="rules">
             <el-form-item>
-              <el-input v-model="ruleForm.username" :placeholder="usernamePrompt"></el-input>
+              <el-input v-model="form.username" :placeholder="usernamePrompt"></el-input>
             </el-form-item>
             <el-form-item prop="password">
-              <el-input type="password" :placeholder="passwordPrompt" v-model="ruleForm.password" show-password></el-input>
+              <el-input type="password" :placeholder="passwordPrompt" v-model="form.password" show-password></el-input>
             </el-form-item>
             <el-form-item prop="checkPassword">
               <el-input v-if="type==='register'" type="password" placeholder="Confirm Password" v-model="checkPassword" show-password></el-input>
             </el-form-item>
             <el-form-item label="">
-              <el-button type="primary" :disabled="loginButtonEnabled"  @click="login" style="width: 100%
+              <el-button type="primary" :disabled="loginButtonEnabled"  @click="submit" style="width: 100%
 ">{{ type | upperCase}}</el-button>
             </el-form-item>
           </el-form>
@@ -45,7 +45,7 @@ export default {
         callback(new Error('请输入密码'))
       } else {
         if (this.checkPassword !== '') {
-          this.$refs.ruleForm.validateField('checkPass')
+          this.$refs.form.validateField('checkPass')
         }
         callback()
       }
@@ -53,7 +53,7 @@ export default {
     let validatePass2 = (rule, value, callback) => {
       if (value === '') {
         callback(new Error('请再次输入密码'))
-      } else if (value !== this.ruleForm.password) {
+      } else if (value !== this.form.password) {
         callback(new Error('两次输入密码不一致!'))
       } else {
         callback()
@@ -66,7 +66,7 @@ export default {
       registerPrompt: 'Don\'t have an account?',
       registerButtonText: 'Register',
       type: LOGIN,
-      ruleForm: {
+      form: {
         username: '',
         password: ''
       },
@@ -150,15 +150,37 @@ export default {
         that.loading = false
       }, this.waitTime)
     },
-    login () {
+    submit () {
       this.loading = true
-      axiosWrapper('/logincheck', 'post', {form: this.ruleForm}).then(data => {
+      if (this.type === LOGIN) {
+        this.login()
+      } else {
+        this.register()
+      }
+    },
+    login () {
+      axiosWrapper('/authenticate', 'post', {form: this.form}).then(data => {
+        console.log(data)
         this.$store.commit('SET_TOKEN', data.data.token)
-        this.$store.commit('SET_USER', data.data.username)
-        this.$message.success('login Success!')
+        this.$store.commit('SET_USER', this.form.username)
+        this.$message.success('login Succeed!')
         this.$router.push({name: 'lobby'})
       }).catch(e => {
         if (e) {
+          this.loading = false
+          this.$message.error(this.type + ' Failed!')
+        }
+      })
+    },
+    register () {
+      axiosWrapper('/add', 'post', {form: this.form}).then(data => {
+        this.$store.commit('SET_TOKEN', data.data.token)
+        this.$store.commit('SET_USER', this.form.username)
+        this.$message.success('Register Succeed!')
+        this.$router.push({name: 'lobby'})
+      }).catch(e => {
+        if (e) {
+          this.loading = false
           this.$message.error(this.type + ' Failed!')
         }
       })

@@ -30,7 +30,7 @@ let lobbyDemo = {
 }
 
 export default {
-  'post|/requestroom': option => {
+  'post|/goBattle': option => {
     return {
       status: 200,
       data: lobbyDemo
