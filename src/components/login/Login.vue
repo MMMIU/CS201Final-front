@@ -244,7 +244,7 @@ export default {
 }
 
 .register {
-  color: #303133;
+  color: white;
   text-align: center;
   margin-bottom: 3rem;
 }

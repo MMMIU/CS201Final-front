@@ -7,8 +7,11 @@
         </el-header>
         <el-main style="width: 80%">
           Username: {{username}}
+          <br>
           <br>Total number of games played: {{total}}
+          <br>
           <br> Total number of winning games: {{win}}
+          <br>
           <br> Win rate: {{winRate|twoDecimal}}%
         </el-main>
         <el-footer class="backButton">

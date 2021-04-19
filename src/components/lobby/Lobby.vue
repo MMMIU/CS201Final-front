@@ -259,18 +259,18 @@ export default {
 }
 
 .lobbyContainer .el-carousel__item:nth-child(4n) {
-  background-color: #60BEFF;
+  background-color: #DCDCDC;
 }
 
 .lobbyContainer .el-carousel__item:nth-child(4n+1) {
-  background-color: #409EFF;
+  background-color: #FFF2F2;
 }
 
 .lobbyContainer .el-carousel__item:nth-child(4n+2) {
-  background-color: #42b983;
+  background-color: #E3AEA2;
 }
 
 .lobbyContainer .el-carousel__item:nth-child(4n+3) {
-  background-color: #32a973;
+  background-color: #B4ADAB;
 }
 </style>

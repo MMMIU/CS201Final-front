@@ -36,7 +36,7 @@ export default {
   height: 100%;
   position: fixed;
   z-index: -1;
-  background: radial-gradient(220% 105% at top center, #1b2947 10%, #75517d 40%, #e96f92 65%, #f7f7b6);
+  background: radial-gradient(220% 105% at top center, black 20%, #409AFF 50%, #0000BF 85%, #080BBF);
   overflow: hidden;
 }
 @keyframes rotate {
