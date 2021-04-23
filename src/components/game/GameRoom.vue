@@ -5,47 +5,65 @@
          element-loading-background="rgba(250, 250, 250, 0.8)"
          :element-loading-text="loadingText"
     >
-      <div class="startCover" v-if="state===0"><div>{{startCountDownSecond}}</div></div>
-      <div class="endCover" v-if="state===2">
+      <div class="startCover" v-if="state===0">
+        <div>{{ startCountDownSecond }}</div>
+      </div>
+      <div class="endCover" :style="{backgroundColor: user.score>opponent.score?'#409EFF':'#E6A23C'}" v-if="state===2">
         <div id="endSlogan">{{ endSlogan }}</div>
         <div id="endScorePanel">
           <div>
-            {{user.name}}: {{user.score}}<br>
-            {{opponent}}: {{opponent.score}}
+            {{ user.name }}'s Score:&nbsp;<br>
+            {{ opponent.name }}'s Score:&nbsp;
+          </div>
+          <div>
+            &nbsp;{{ user.score }}<br>
+            &nbsp;{{ opponent.score }}
           </div>
         </div>
         <div id="endOptionsPanel">
-          <el-button type="primary" style="width: 100%;margin-top: 1rem" @click="goBack">Back To Lobby</el-button>
-          <el-button type="primary" style="width: 100%;margin-top: 1rem" @click="newRound">Another Round</el-button>
+          <el-button :type="user.score>opponent.score?'primary':'warning'" style="width: 100%;margin-top: 1rem"
+                     @click="goBack">Back To Lobby
+          </el-button>
+          <el-button :type="user.score>opponent.score?'primary':'warning'" style="width: 100%;margin-top: 1rem"
+                     @click="newRound">Another Round
+          </el-button>
         </div>
       </div>
       <el-container>
         <el-header class="scorePanel">
           <div id="p1" class="p1Progress playerScoreProgress"
-               :style="{width: Math.round((((user.score+opponent.score)>0?((5+user.score)/(user.score+opponent.score+10)*100):50)))+'%'}">
-            <p>{{user.name}}</p>
-            <p>{{user.score}}</p>
+               :style="{width: Math.round((((user.score+opponent.score)>0?((user.score)/(user.score+opponent.score)*100):50)))+'%'}">
+            <p>{{ user.name }}&nbsp;{{ user.score }}</p>
           </div>
           <div id="p2" class="p2Progress playerScoreProgress">
-            <p>{{opponent.name}}</p>
-            <p>{{opponent.score}}</p>
+            <p>{{ opponent.score }}&nbsp;{{ opponent.name }}</p>
           </div>
         </el-header>
         <el-container>
-          <el-header class="timerPanel" height="10px">
-            <div class="timerProgress" :style="{width: (answerTimeRemain/answerTime*100)+'%'}"></div>
+          <el-header height="40px" class="timerAndProgress">
+            <div class="timerPanel">
+              <div class="timerBar" :style="{width: (answerTimeRemain/answerTime*100)+'%'}"></div>
+            </div>
+            <el-steps class="steps" :active="this.question.index-1" finish-status="success">
+              <el-step v-for="i in questions.length" :key="i"></el-step>
+            </el-steps>
           </el-header>
           <el-container class="questionPanel">
-            <el-header>{{ question.content }}</el-header>
+            <el-header><p>{{ question.content }}</p></el-header>
             <el-main class="optionPanel">
               <el-button v-for="(option,index) in question.options"
                          :id="'option'+index"
                          :disabled="buttonDisabled"
-                         :key="option" @click="checkChoice(index)"
+                         :key="option"
                          :loading="buttonDisabled&&index===user.choice"
-                         :type="buttonDisabled?(index===user.choice?(user.choice===question.correctChoice?'success':'danger'):''):''"
-              >{{ option }}</el-button>
+                         :type="buttonDisabled?(index===user.choice?(user.choice===question.correctChoice?'success':'danger'):''):(index%2===0?'':'info')"
+                         @click="checkChoice(index)"
+              >{{ option }}
+              </el-button>
             </el-main>
+            <el-footer>
+              <el-button type="danger" @click="confirmGoBack">Back To Lobby</el-button>
+            </el-footer>
           </el-container>
         </el-container>
       </el-container>
@@ -61,6 +79,7 @@ const ANSWERING = 1
 const FINISHING = 2
 export default {
   name: 'GameRoom',
+  inject: ['reload'],
   data () {
     return {
       roomNumber: this.$store.state.roomNumber,
@@ -78,6 +97,7 @@ export default {
         score: 0,
         answerFinished: false
       },
+      questions: this.$store.state.questions,
       question: {
         index: 1,
         content: null,
@@ -101,17 +121,15 @@ export default {
   },
   mounted () {
     this.answerTimeRemain = this.answerTime
-    this.question.content = this.$store.state.questions[this.question.index - 1].question
-    this.question.options = this.$store.state.questions[this.question.index - 1].options
-    this.question.correctChoice = this.$store.state.questions[this.question.index - 1].answer
+    this.question.content = this.questions[this.question.index - 1].question
+    this.question.options = this.questions[this.question.index - 1].options
+    this.question.correctChoice = this.questions[this.question.index - 1].answer
     this.startCountDown()
   },
   methods: {
-    init () {
-
-    },
     goBack () {
       clearInterval(this.answerTimer)
+      clearInterval(this.scoreGetTimer)
       this.$store.commit('CLEAR_ROOM')
       this.$router.push({name: 'lobby'})
     },
@@ -140,9 +158,9 @@ export default {
     },
     nextQuestion () {
       if (!this.scoreUploaded) {
-        this.uploadScore()
+        this.uploadScore(this.question.index, this.user.choice === this.question.correctChoice ? 1 : 0)
       }
-      if (this.question.index >= this.$store.state.questions.length) {
+      if (this.question.index >= this.questions.length) {
         clearInterval(this.answerTimer)
         this.answerTimer = null
         this.loading = true
@@ -153,9 +171,9 @@ export default {
       this.scoreUploaded = false
       this.buttonDisabled = false
       this.question.index++
-      this.question.content = this.$store.state.questions[this.question.index - 1].question
-      this.question.options = this.$store.state.questions[this.question.index - 1].options
-      this.question.correctChoice = this.$store.state.questions[this.question.index - 1].answer
+      this.question.content = this.questions[this.question.index - 1].question
+      this.question.options = this.questions[this.question.index - 1].options
+      this.question.correctChoice = this.questions[this.question.index - 1].answer
     },
     checkChoice (index) {
       this.user.choice = index
@@ -164,15 +182,15 @@ export default {
         this.user.score++
       }
       this.scoreUploaded = true
-      this.uploadScore()
+      this.uploadScore(this.question.index, this.user.choice === this.question.correctChoice ? 1 : 0)
     },
-    uploadScore () {
+    uploadScore (index, score) {
       axiosWrapper('/uploadScore', 'post',
         {
           token: this.token,
-          index: this.question.index,
-          score: this.user.choice === this.question.correctChoice ? 1 : 0
-        }).then(data => {
+          index: index,
+          score: score
+        }).then(() => {
         console.log('upload succeed')
       }).catch(e => {
         if (e) {
@@ -190,7 +208,7 @@ export default {
           this.opponent.score = data.data.opponentScore
           this.scoreGetCount = data.data.questionAnswered
           console.log('get score succeed')
-          if (this.scoreGetCount >= this.$store.state.questions.length) {
+          if (this.scoreGetCount >= this.questions.length) {
             clearInterval(this.scoreGetTimer)
             this.finishMatchHelper()
           }
@@ -209,7 +227,7 @@ export default {
     },
     finishMatch () {
       if (this.answerTimer !== null) return
-      if (this.scoreGetCount < this.$store.state.questions.length) return
+      if (this.scoreGetCount < this.questions.length) return
       this.state = FINISHING
       this.loading = false
       if (this.user.score > this.opponent.score) {
@@ -227,6 +245,7 @@ export default {
         this.showScores = true
         showEndScorePanel()
       }, 1000)
+
       function showEndScorePanel () {
         setTimeout(() => {
           let endScorePanel = document.getElementById('endScorePanel')
@@ -236,6 +255,7 @@ export default {
           showEndOptionsPanel()
         }, 500)
       }
+
       function showEndOptionsPanel () {
         setTimeout(() => {
           let endOptionsPanel = document.getElementById('endOptionsPanel')
@@ -248,7 +268,7 @@ export default {
     newRound () {
       this.loading = true
       this.loadingText = this.loadingText = 'Waiting for join...'
-      axiosWrapper('/requestroom', 'post', {type: 'join', token: this.token}).then(data => {
+      axiosWrapper('/goBattle', 'post', {type: 'join', token: this.token}).then(data => {
         this.$store.commit('SET_ROOM_NUMBER', data.data.roomNumber)
         this.$store.commit('SET_OPPONENT', data.data.opponent)
         this.$store.commit('SET_QUESTIONS', data.data.questions)
@@ -261,27 +281,16 @@ export default {
         }
       })
     },
-    reload () {
-      this.isRouterAlive = false
-      this.answerTimeRemain = this.answerTime
-      this.question.index = 1
-      this.question.content = this.$store.state.questions[this.question.index - 1].question
-      this.question.options = this.$store.state.questions[this.question.index - 1].options
-      this.opponent = this.$store.state.opponent
-      this.question.correctChoice = this.$store.state.questions[this.question.index - 1].answer
-      this.startCountDownSecond = 3
-      this.state = PREPARING
-      this.loading = false
-      this.loadingText = null
-      this.user.score = 0
-      this.opponent.score = 0
-      this.user.choice = -1
-      this.buttonDisabled = false
-      this.scoreGetCount = 0
-      clearInterval(this.scoreGetTimer)
-      clearInterval(this.answerTimer)
-      this.startCountDown()
-      this.$nextTick(() => (this.isRouterAlive = true))
+    confirmGoBack () {
+      this.$confirm('Are you sure?', 'Back To Lobby', {
+        confirmButtonText: 'Yes',
+        cancelButtonText: 'Cancel'
+      }).then(() => {
+        this.uploadScore(this.questions.length, 0)
+        this.goBack()
+      }).catch((e) => {
+        if (e) console.log('Confirm canceled.')
+      })
     }
   }
 }
@@ -290,13 +299,16 @@ export default {
 <style scoped>
 .gameRoom {
   width: 100%;
+  max-width: 1200px;
   height: 100%;
+  margin: 0 auto;
   display: flex;
   justify-content: center;
   align-items: center;
   user-select: none;
 }
-.startCover{
+
+.startCover {
   width: 100%;
   height: 100%;
   background-color: #42b983;
@@ -305,17 +317,18 @@ export default {
   justify-content: center;
   align-items: center;
 }
-.startCover div{
+
+.startCover div {
   font-size: 10rem;
 }
-.endCover{
+
+.endCover {
   width: 100%;
   height: 100%;
-  background-color: #409EFF;
   color: antiquewhite;
 }
 
-#endSlogan{
+#endSlogan {
   position: absolute;
   width: 100%;
   height: 100%;
@@ -328,7 +341,7 @@ export default {
   z-index: 3;
 }
 
-#endScorePanel{
+#endScorePanel {
   position: absolute;
   top: 30%;
   opacity: 0;
@@ -342,11 +355,21 @@ export default {
   align-items: center;
   font-size: 2rem;
 }
-#endScorePanel div{
+
+#endScorePanel div {
   text-align: center;
+  width: 50%;
 }
 
-#endOptionsPanel{
+#endScorePanel div:nth-child(1) {
+  text-align: right;
+}
+
+#endScorePanel div:nth-child(2) {
+  text-align: left;
+}
+
+#endOptionsPanel {
   position: absolute;
   top: 70%;
   opacity: 0;
@@ -361,7 +384,7 @@ export default {
 }
 
 .container {
-  background-color: rgb(255,245,247);
+  background-color: rgb(255, 245, 247);
   width: 80%;
   height: 40rem;
   position: relative;
@@ -370,56 +393,94 @@ export default {
   box-shadow: 0 0 0 0.06rem hsla(0, 0%, 100%, .3) inset, 0 .5em 1em rgba(0, 0, 0, 0.6);
 }
 
-.timerPanel{
-  background-color: #303133;
+.timerAndProgress {
   padding: 0;
 }
 
-.timerProgress{
+.timerPanel {
+  background-color: #303133;
+}
+
+.timerBar {
   margin-left: 0;
-  height: 100%;
+  height: 10px;
   background-color: #60BEFF;
   transition: 1s linear;
 }
 
-.scorePanel{
+.steps {
+  margin-top: 10px;
+  margin-left: 20px;
+  margin-right: 20px;
+}
+
+.scorePanel {
   background-color: #60BEFF;
   width: 100%;
   padding: 0;
 }
-.playerScoreProgress{
+
+.playerScoreProgress {
   height: 100%;
   transition: 1s;
+  font-size: 20px;
+  line-height: 4rem;
+  color: whitesmoke;
 }
-.p1Progress{
+
+.p1Progress {
   float: left;
   background-color: #42b983;
   min-width: 100px;
   max-width: calc(100% - 100px);
+  text-indent: 10px;
 }
 
-.p2Progress{
+.p2Progress {
   float: right;
   text-align: right;
+  padding-right: 10px;
 }
 
-.optionPanel .el-button{
+.questionPanel .el-header {
+  margin-top: 20px;
+  font-size: 25px;
+}
+
+.optionPanel .el-button {
   margin-left: 0;
   width: 100%;
-  margin-top: 20px;
+  margin-top: 15px;
+  height: 70px;
 }
+
+.optionPanel .el-button--info {
+  color: #303133;
+  background-color: #EBEEF5;
+}
+
+.questionPanel .el-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.questionPanel p {
+  word-wrap: break-word;
+}
+
 .backButton {
   color: #303133;
   text-align: center;
   margin-bottom: 3rem;
 }
 
-.backButton span{
+.backButton span {
   color: #409EFF;
   cursor: pointer;
 }
 
-.backButton span:hover{
+.backButton span:hover {
   color: #60BEFF;
 }
 

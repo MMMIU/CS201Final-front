@@ -231,6 +231,7 @@ export default {
 }
 .lobbyContainer {
   width: 80%;
+  max-width: 1200px;
   height: 40rem;
   z-index: 1;
   display: flex;

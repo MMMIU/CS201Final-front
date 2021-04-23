@@ -3,18 +3,21 @@ let loginDemo = {
   opponentScore: 0
 }
 let timer = null
+
 function increase () {
   if (timer) return
-  if (loginDemo.questionAnswered >= 2) return
   timer = setInterval(() => {
     loginDemo.questionAnswered++
-    loginDemo.opponentScore++
-    if (loginDemo.questionAnswered === 2) {
+    if (loginDemo.opponentScore < 2) {
+      loginDemo.opponentScore++
+    }
+    if (loginDemo.questionAnswered >= 4) {
       clearInterval(timer)
       timer = null
     }
   }, 10000)
 }
+
 export default {
   'post|/getScore': option => {
     increase()

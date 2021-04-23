@@ -6,13 +6,18 @@
           Profile
         </el-header>
         <el-main style="width: 80%">
-          Username: {{username}}
-          <br>
-          <br>Total number of games played: {{total}}
-          <br>
-          <br> Total number of winning games: {{win}}
-          <br>
-          <br> Win rate: {{winRate|twoDecimal}}%
+          <div class="block">
+            <p> User name:&nbsp; </p>
+            <p> Number of play:&nbsp;  </p>
+            <p> Number of victory:&nbsp; </p>
+            <p> Win rate:&nbsp; </p>
+          </div>
+          <div class="block">
+            <p> {{username}} </p>
+            <p> {{total}} </p>
+            <p> {{win}} </p>
+            <p> {{winRate|twoDecimal}}% </p>
+          </div>
         </el-main>
         <el-footer class="backButton">
           <el-button type="primary" style="width: 100%;margin-top: 1rem" @click="goBack">Back To Lobby</el-button>
@@ -81,7 +86,20 @@ export default {
   position: absolute;
   background-color: rgba(255, 255, 255, 0.1);
 }
-
+.el-main{
+  padding: 0;
+}
+.block{
+  width: 30%;
+  height: 100%;
+  float: left;
+  line-height: 30px;
+  color: white;
+}
+.block:nth-child(1){
+  width: 70%;
+  color: #303133;
+}
 .backButton {
   color: #303133;
   text-align: center;

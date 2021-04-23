@@ -2,7 +2,7 @@
   <div id="app">
 <!--    <background-music></background-music>-->
     <background-stars></background-stars>
-    <router-view/>
+    <router-view v-if="isRouterAlive"/>
   </div>
 </template>
 
@@ -11,10 +11,16 @@ import backgroundMusic from './components/background/backgroundMusic'
 import backgroundStars from './components/background/backgroundStars'
 export default {
   name: 'App',
+  provide () {
+    return {
+      reload: this.reload
+    }
+  },
   data () {
     return {
       screenWidth: document.body.clientWidth,
-      showCircles: this.screenWidth > this.MOBILE
+      showCircles: this.screenWidth > this.MOBILE,
+      isRouterAlive: true
     }
   },
   components: {backgroundStars, backgroundMusic},
@@ -36,6 +42,14 @@ export default {
     screenWidth (val) {
       this.screenWidth = val
       this.showCircles = val > this.MOBILE
+    }
+  },
+  methods: {
+    reload () {
+      this.isRouterAlive = false
+      this.$nextTick(function () {
+        this.isRouterAlive = true
+      })
     }
   }
 }

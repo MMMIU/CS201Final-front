@@ -24,7 +24,8 @@ export default {
       translate3d(0, 0, -${starDistance}px)
       rotateY(${(Math.random() * 360)}deg)
       rotateX(${(Math.random() * -60)}deg)
-      scale(${scale})`
+      scale(${scale})
+      `
     })
   }
 }
@@ -36,7 +37,7 @@ export default {
   height: 100%;
   position: fixed;
   z-index: -1;
-  background: radial-gradient(220% 105% at top center, black 20%, #409AFF 50%, #0000BF 85%, #080BBF);
+  background: radial-gradient(220% 105% at top center, black 20%, #409AFF 55%, #CBBACC 85%, #2580B2);
   overflow: hidden;
 }
 @keyframes rotate {

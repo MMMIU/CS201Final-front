@@ -1,33 +1,42 @@
 <template>
   <div class="login">
-    <div  class="container">
-      <el-container id="loginContainer" v-loading="loading" class="userEnter" element-loading-background="rgba(250, 250, 250, 0.8)">
+    <div class="container">
+      <el-container id="loginContainer" v-loading="loading" class="userEnter"
+                    element-loading-background="rgba(250, 250, 250, 0.8)">
         <el-header height="13rem" class="welcome">
           {{ type | upperCase }}
         </el-header>
         <el-main style="width: 80%">
-          <el-form :rules="rules">
-            <el-form-item>
+          <el-form :rules="rules" :model="form" ref="loginForm">
+            <el-form-item prop="username">
               <el-input v-model="form.username" :placeholder="usernamePrompt"></el-input>
             </el-form-item>
             <el-form-item prop="password">
-              <el-input type="password" :placeholder="passwordPrompt" v-model="form.password" show-password></el-input>
+              <el-input type="password" :placeholder="passwordPrompt" v-model="form.password" show-password
+                        @keyup.enter.native="submit"></el-input>
             </el-form-item>
             <el-form-item prop="checkPassword">
-              <el-input v-if="type==='register'" type="password" placeholder="Confirm Password" v-model="checkPassword" show-password></el-input>
+              <el-input v-show="type==='register'" type="password" placeholder="Confirm Password"
+                        v-model="form.checkPassword" show-password></el-input>
             </el-form-item>
-            <el-form-item label="">
-              <el-button type="primary" :disabled="loginButtonEnabled"  @click="submit" style="width: 100%
-">{{ type | upperCase}}</el-button>
+            <el-form-item>
+              <el-button type="success" :disabled="loginButtonEnabled" @click="submit" style="width: 100%
+">{{ type | upperCase }}
+              </el-button>
+            </el-form-item>
+            <el-form-item>
+              <el-button type="warning" :disabled="loginButtonEnabled" @click="touristLogin" style="width: 100%">{{'Continue as Tourist' | upperCase}}
+              </el-button>
             </el-form-item>
           </el-form>
         </el-main>
-        <el-footer class="register">{{registerPrompt}}
-          <span @click="changeMode">{{registerButtonText}}</span>
+        <el-footer class="register">{{ registerPrompt }}
+          <span @click="changeMode">{{ registerButtonText }}</span>
         </el-footer>
       </el-container>
       <div id="containerBackground" class="containerBackground">
-        <div id = "containerBackgroundCircle" class="containerBackgroundCircle" :style="{width: mouseHovering?'100%':0, height: mouseHovering?'100%':0}"></div>
+        <div id="containerBackgroundCircle" class="containerBackgroundCircle"
+             :style="{width: mouseHovering?'100%':0, height: mouseHovering?'100%':0}"></div>
       </div>
     </div>
   </div>
@@ -35,6 +44,7 @@
 
 <script>
 import {axiosWrapper} from '../../api/index'
+
 const LOGIN = 'login'
 const REGISTER = 'register'
 export default {
@@ -42,41 +52,44 @@ export default {
   data () {
     let validatePass = (rule, value, callback) => {
       if (value === '') {
-        callback(new Error('请输入密码'))
+        callback(new Error('Password should not be empty'))
       } else {
         if (this.checkPassword !== '') {
-          this.$refs.form.validateField('checkPass')
+          this.$refs.loginForm.validateField('checkPassword')
         }
         callback()
       }
     }
     let validatePass2 = (rule, value, callback) => {
-      if (value === '') {
-        callback(new Error('请再次输入密码'))
-      } else if (value !== this.form.password) {
-        callback(new Error('两次输入密码不一致!'))
+      if (value === '' && this.type === REGISTER) {
+        callback(new Error('This field should not be empty'))
+      } else if (value !== this.form.password && this.type === REGISTER) {
+        callback(new Error('Inconsistent password'))
       } else {
         callback()
       }
     }
     return {
       screenWidth: document.body.clientWidth,
-      usernamePrompt: 'username',
+      usernamePrompt: 'Username',
       passwordPrompt: 'Password',
       registerPrompt: 'Don\'t have an account?',
       registerButtonText: 'Register',
       type: LOGIN,
       form: {
         username: '',
-        password: ''
+        password: '',
+        checkPassword: ''
       },
-      checkPassword: '',
       rules: {
+        username: [
+          {required: true, message: 'Username should not be empty', trigger: 'blur'}
+        ],
         password: [
-          { validator: validatePass, trigger: 'blur' }
+          {validator: validatePass, trigger: 'change'}
         ],
         checkPassword: [
-          { validator: validatePass2, trigger: 'blur' }
+          {validator: validatePass2, trigger: 'change'}
         ]
       },
       loginButtonEnabled: false,
@@ -86,7 +99,8 @@ export default {
       mouseHovering: false,
       backgroundChangeTime: 0.5,
       changeBusy: false,
-      onMobile: (document.body.clientWidth <= this.MOBILE)
+      onMobile: (document.body.clientWidth <= this.MOBILE),
+      validatePass2
     }
   },
   created () {
@@ -132,6 +146,7 @@ export default {
   methods: {
     changeMode () {
       this.loading = true
+      this.$refs['loginForm'].resetFields()
       if (this.type === LOGIN) {
         this.type = REGISTER
         this.usernamePrompt = 'New username'
@@ -140,7 +155,7 @@ export default {
         this.registerPrompt = 'Already have an account?'
       } else {
         this.type = LOGIN
-        this.usernamePrompt = 'username'
+        this.usernamePrompt = 'Username'
         this.passwordPrompt = 'Password'
         this.registerButtonText = 'Register'
         this.registerPrompt = 'Don\'t have an account?'
@@ -152,15 +167,21 @@ export default {
     },
     submit () {
       this.loading = true
-      if (this.type === LOGIN) {
-        this.login()
-      } else {
-        this.register()
-      }
+      this.$refs['loginForm'].validate((valid) => {
+        if (valid) {
+          if (this.type === LOGIN) {
+            this.login()
+          } else {
+            this.register()
+          }
+        } else {
+          this.loading = false
+          return false
+        }
+      })
     },
     login () {
       axiosWrapper('/authenticate', 'post', {form: this.form}).then(data => {
-        console.log(data)
         this.$store.commit('SET_TOKEN', data.data.token)
         this.$store.commit('SET_USER', this.form.username)
         this.$message.success('login Succeed!')
@@ -184,6 +205,9 @@ export default {
           this.$message.error(this.type + ' Failed!')
         }
       })
+    },
+    touristLogin () {
+
     }
   }
 }
@@ -208,7 +232,7 @@ export default {
   box-shadow: 0 0 0 0.06rem hsla(0, 0%, 100%, .3) inset, 0 .5em 1em rgba(0, 0, 0, 0.6);
 }
 
-.containerBackground{
+.containerBackground {
   position: absolute;
   height: 96rem;
   width: 96rem;
@@ -218,8 +242,8 @@ export default {
   z-index: -1;
 }
 
-.containerBackgroundCircle{
-  background-color: rgba(200,200,200,0.5);
+.containerBackgroundCircle {
+  background-color: rgba(200, 200, 200, 0.5);
   border-radius: 50%;
 }
 
@@ -249,12 +273,12 @@ export default {
   margin-bottom: 3rem;
 }
 
-.register span{
+.register span {
   color: #409EFF;
   cursor: pointer;
 }
 
-.register span:hover{
+.register span:hover {
   color: #60BEFF;
 }
 
