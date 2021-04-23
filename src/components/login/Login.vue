@@ -3,7 +3,7 @@
     <div class="container">
       <el-container id="loginContainer" v-loading="loading" class="userEnter"
                     element-loading-background="rgba(250, 250, 250, 0.8)">
-        <el-header height="13rem" class="welcome">
+        <el-header height="11rem" class="welcome">
           {{ type | upperCase }}
         </el-header>
         <el-main style="width: 80%">
@@ -251,7 +251,6 @@ export default {
   line-height: 13rem;
   color: white;
   font-size: 2rem;
-  font-weight: 100;
 }
 
 .userEnter {
