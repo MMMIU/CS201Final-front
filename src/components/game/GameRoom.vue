@@ -264,7 +264,6 @@ export default {
             token: this.user.token,
             roomNumber: this.roomNumber
           }).then(data => {
-          console.log(data)
           if (data.flag) {
             if (data.data) {
               console.log('Opponent\'s Score Updated')
