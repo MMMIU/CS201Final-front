@@ -218,7 +218,6 @@ export default {
         this.answerTimer = null
         this.loading = true
         this.loadingText = 'Waiting for score update...'
-        this.checkWinCondition()
         return
       }
       this.scoreUploaded = false
@@ -247,6 +246,9 @@ export default {
             roomNumber: this.roomNumber
           }).then(() => {
           console.log('Score Uploaded')
+          if (this.question.index >= this.questions.length) {
+            this.checkWinCondition()
+          }
         }).catch(e => {
           if (e) {
             this.$message.error('Server Error')
@@ -254,6 +256,9 @@ export default {
         })
       } else {
         this.correctOrNot[this.question.index - 1] = 'error'
+        if (this.question.index >= this.questions.length) {
+          this.checkWinCondition()
+        }
       }
     },
     getP2Score () {
@@ -267,6 +272,7 @@ export default {
           if (data.flag) {
             if (data.data) {
               console.log('Opponent\'s Score Updated')
+              console.log(data.data)
               this.opponent.score = data.data
             }
           } else {
@@ -283,7 +289,6 @@ export default {
     checkWinCondition () {
       if (this.state !== ANSWERING) return
       let checkFailed = false
-      clearInterval(this.scoreGetTimer)
       this.winConditionCheckerTimer = setInterval(() => {
         axiosWrapper('/battleroom/winCondition', 'post',
           {
@@ -296,6 +301,7 @@ export default {
               console.log('Win condition checked')
               clearInterval(this.answerTimer)
               clearInterval(this.winConditionCheckerTimer)
+              clearInterval(this.scoreGetTimer)
               setTimeout(() => {
                 this.finishMatch()
               }, 1000)
