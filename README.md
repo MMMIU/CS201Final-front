@@ -1,4 +1,4 @@
-# brainattack
+# CS201FinalProject-brain attack-front end
 
 > This is the front end of the final project for USC 21sp CSCI201 GROUP 24
 
