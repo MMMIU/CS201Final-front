@@ -8,7 +8,7 @@
 # Main Author 
 Yifei Miao
 
-# Author 
+# Contributor
 Qingpei Li
 
 ```
