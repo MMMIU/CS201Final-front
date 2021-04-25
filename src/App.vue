@@ -7,8 +7,10 @@
 
 <script>
 import backgroundStars from './components/background/BackgroundStars'
+
 export default {
   name: 'App',
+  components: {backgroundStars},
   provide () {
     return {
       reload: this.reload
@@ -16,30 +18,15 @@ export default {
   },
   data () {
     return {
-      screenWidth: document.body.clientWidth,
-      showCircles: this.screenWidth > this.MOBILE,
       isRouterAlive: true
     }
   },
-  components: {backgroundStars},
-  created () {
-    window.addEventListener('resize', () => {
-      this.screenWidth = document.body.clientWidth
-      this.showCircles = (this.screenWidth > this.MOBILE)
-    })
-  },
   mounted () {
-    this.showCircles = this.screenWidth > this.MOBILE
+    console.log(window.innerHeight)
     window.onpopstate = () => {
       if (!this.$store.state.allowBack) {
         history.go(1)
       }
-    }
-  },
-  watch: {
-    screenWidth (val) {
-      this.screenWidth = val
-      this.showCircles = val > this.MOBILE
     }
   },
   methods: {

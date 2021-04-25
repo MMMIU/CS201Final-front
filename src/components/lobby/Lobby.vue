@@ -112,6 +112,9 @@ export default {
       })
     },
     goProfile () {
+      if (this.token < 0) {
+        this.$message.warning('Please login or register first')
+      }
       this.loading = true
       this.loadingText = 'Waiting for profile data...'
       axiosWrapper('/user/statistics', 'post', {token: this.token}).then(data => {

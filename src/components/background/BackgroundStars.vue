@@ -1,7 +1,8 @@
 <template>
   <div class="backgroundStars">
     <div id="starsContainer">
-      <div v-for="item in numOfStars" class="star" :key="item" ref="star" :style="{animationDelay: Math.random() * 1.5 + 's', transform: 'scale('+ Math.random() * 1.5+')'}"></div>
+      <div v-for="item in numOfStars" class="star" :key="item" ref="star"
+           :style="{animationDelay: Math.random() * 1.5 + 's', transform: 'scale('+ Math.random() * 1.5+')'}"></div>
     </div>
   </div>
 </template>
@@ -10,7 +11,7 @@ export default {
   name: 'backgroundStars',
   data () {
     return {
-      numOfStars: 800,
+      numOfStars: (document.body.clientWidth <= this.MOBILE) ? 255 : 800,
       distance: 800
     }
   },
@@ -32,7 +33,7 @@ export default {
 </script>
 
 <style scoped>
-.backgroundStars{
+.backgroundStars {
   width: 100%;
   height: 100%;
   position: fixed;
@@ -40,6 +41,7 @@ export default {
   background: radial-gradient(220% 105% at top center, black 20%, #409AFF 55%, #CBBACC 85%, #2580B2);
   overflow: hidden;
 }
+
 @keyframes rotate {
   0% {
     transform: rotateZ(0deg) rotateX(40deg) rotateY(0);
@@ -56,6 +58,7 @@ export default {
   animation: rotate 200s infinite linear;
   top: 0;
 }
+
 .star {
   width: 3px;
   height: 3px;
@@ -66,8 +69,13 @@ export default {
   backface-visibility: hidden;
   animation: flash 1s alternate infinite;
 }
+
 @keyframes flash {
-  0%{opacity: 0;}
-  100%{opacity: 1;}
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 </style>

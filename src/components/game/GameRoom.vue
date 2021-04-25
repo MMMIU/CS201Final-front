@@ -588,7 +588,7 @@ export default {
   }
 
   .optionPanel {
-    margin-top: 0;
+    margin-top: 50px;
   }
 
   #endScorePanel {
