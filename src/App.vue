@@ -22,7 +22,6 @@ export default {
     }
   },
   mounted () {
-    console.log(window.innerHeight)
     window.onpopstate = () => {
       if (!this.$store.state.allowBack) {
         history.go(1)

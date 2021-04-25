@@ -272,7 +272,6 @@ export default {
           if (data.flag) {
             if (data.data) {
               console.log('Opponent\'s Score Updated')
-              console.log(data.data)
               this.opponent.score = data.data
             }
           } else {
