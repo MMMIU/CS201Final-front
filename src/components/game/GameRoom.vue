@@ -41,8 +41,8 @@
             <div class="timerPanel">
               <div class="timerBar" :style="{width: (answerTimeRemain/answerTime*100)+'%'}"></div>
             </div>
-            <el-steps class="steps" :active="question.index-1">
-              <el-step v-for="i in questions.length" :key="i" :status="correctOrNot[i]"></el-step>
+            <el-steps class="steps" :active="question.index">
+              <el-step v-for="(item,index) in correctOrNot" :key="'step'+index" :status="item"></el-step>
             </el-steps>
           </el-header>
           <el-container class="questionPanel">
@@ -211,7 +211,7 @@ export default {
     nextQuestion () {
       if (this.state !== ANSWERING) return
       if (!this.scoreUploaded) {
-        this.uploadScore(this.question.index, this.user.choice === this.question.correctChoice ? 1 : 0)
+        this.uploadScore(this.question.index, 0)
       }
       if (this.question.index >= this.questions.length) {
         clearInterval(this.answerTimer)
@@ -269,8 +269,6 @@ export default {
             if (data.data) {
               console.log('Opponent\'s Score Updated')
               this.opponent.score = data.data
-            } else {
-              console.log('Opponent\'s Score Update Failed')
             }
           } else {
             this.$message.error('Update score Failed!')
