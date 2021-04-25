@@ -301,9 +301,31 @@ export default {
               clearInterval(this.answerTimer)
               clearInterval(this.winConditionCheckerTimer)
               clearInterval(this.scoreGetTimer)
-              setTimeout(() => {
-                this.finishMatch()
-              }, 1000)
+              axiosWrapper('/battleroom/requestScore', 'post',
+                {
+                  token: this.user.token,
+                  roomNumber: this.roomNumber
+                }).then(data => {
+                if (data.flag) {
+                  if (data.data) {
+                    console.log('Opponent\'s Score Updated')
+                    this.opponent.score = data.data
+                  }
+                } else {
+                  this.$message.error('Update score Failed!')
+                }
+                setTimeout(() => {
+                  this.finishMatch()
+                }, 1000)
+              }).catch(e => {
+                if (e) {
+                  this.$message.error('Server Error')
+                  console.log(e)
+                  setTimeout(() => {
+                    this.finishMatch()
+                  }, 1000)
+                }
+              })
             }
           } else {
             if (!checkFailed) {
