@@ -4,6 +4,7 @@ import Login from '../components/login/Login'
 import Lobby from '../components/lobby/Lobby'
 import GameRoom from '../components/game/GameRoom'
 import Profile from '../components/profile/Profile'
+import About from '../components/about/About'
 import store from '../store'
 
 Vue.use(Router)
@@ -54,6 +55,15 @@ const router = new Router({
         allowBack: true,
         requireAuth: true
       }
+    },
+    {
+      path: '/about',
+      name: 'about',
+      component: About,
+      meta: {
+        allowBack: true,
+        requireAuth: true
+      }
     }
   ]
 })
@@ -89,4 +99,5 @@ function checkAllowBack (to) {
     allowBack: allowBack
   })
 }
+
 export default router

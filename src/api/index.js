@@ -1,9 +1,13 @@
-import axios from '_axios@0.21.1@axios'
+import axios from 'axios'
 
-function axiosWrapper (url, method, param, data) {
-  return axios({url, method, param, data}).then(res => {
-    if (res.data.status === 200) {
+axios.defaults.baseURL = process.env.NODE_ENV === 'development' ? '/api' : ''
+
+function axiosWrapper (url, method, params, data) {
+  return axios({url: url, method: method, params: params, data: data}).then(res => {
+    if (res.status === 200) {
       return res.data
+    } else {
+      this.$message.error(res.status)
     }
   })
 }

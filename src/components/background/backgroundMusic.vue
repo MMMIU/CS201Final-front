@@ -1,6 +1,6 @@
 <template>
   <div class="musicPanel">
-    <audio id="music" src="static/media/music/JABBERLOOP - ソレソレ.mp3"></audio>
+    <audio id="music" src="static/media/music/stars.mp3" autoplay></audio>
     <div id="playIcon" class="el-icon-video-play" @click="playPause"></div>
   </div>
 </template>
@@ -41,7 +41,7 @@ export default {
   height: 45px;
   position: fixed;
   bottom: 80px;
-  right: 30px;
+  right: 80px;
   font-size: 30px;
   z-index: 99999;
 }

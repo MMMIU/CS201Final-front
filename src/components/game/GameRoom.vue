@@ -22,10 +22,7 @@
         </div>
         <div id="endOptionsPanel">
           <el-button :type="user.score>opponent.score?'primary':'warning'" style="width: 100%;margin-top: 1rem"
-                     @click="goBack">Back To Lobby
-          </el-button>
-          <el-button :type="user.score>opponent.score?'primary':'warning'" style="width: 100%;margin-top: 1rem"
-                     @click="newRound">Another Round
+                     @click="goBack(false)">Back To Lobby
           </el-button>
         </div>
       </div>
@@ -62,11 +59,15 @@
               </el-button>
             </el-main>
             <el-footer>
-              <el-button type="danger" @click="confirmGoBack">Back To Lobby</el-button>
+              <el-button type="danger" @click="confirmGoBack">Quit</el-button>
             </el-footer>
           </el-container>
         </el-container>
       </el-container>
+    </div>
+    <div class="logOutCover" v-if="showLogOut">
+      <el-button type="danger" @click="goBack(true)">Quit?</el-button>
+      <el-button type="plain" @click="showLogOut=false">Cancel</el-button>
     </div>
   </div>
 </template>
@@ -82,12 +83,12 @@ export default {
   inject: ['reload'],
   data () {
     return {
-      roomNumber: this.$store.state.roomNumber,
+      roomNumber: null,
       state: PREPARING,
       startCountDownSecond: 3,
       user: {
-        token: this.$store.state.token,
-        name: this.$store.state.name,
+        token: null,
+        name: this.$store.state.username,
         score: 0,
         answerFinished: false,
         choice: -1
@@ -116,8 +117,23 @@ export default {
       isRouterAlive: true,
       scoreGetTimer: null,
       scoreGetCount: 0,
-      scoreUploaded: false
+      scoreUploaded: false,
+      winConditionCheckerTimer: null,
+      showLogOut: false,
+      onMobile: (document.body.clientWidth <= this.MOBILE)
     }
+  },
+  created () {
+    this.user.token = this.$store.state.token
+    this.roomNumber = this.$store.state.roomNumber
+    window.addEventListener('resize', () => {
+      if (document.body.clientWidth > this.MOBILE && this.onMobile) {
+        this.onMobile = false
+      }
+      if (document.body.clientWidth <= this.MOBILE && !this.onMobile) {
+        this.onMobile = true
+      }
+    })
   },
   mounted () {
     this.answerTimeRemain = this.answerTime
@@ -125,13 +141,42 @@ export default {
     this.question.options = this.questions[this.question.index - 1].options
     this.question.correctChoice = this.questions[this.question.index - 1].answer
     this.startCountDown()
+    // this.state = ANSWERING
   },
   methods: {
-    goBack () {
+    goBack (midway) {
+      if (midway) {
+        axiosWrapper('/battleroom/winCondition', 'post',
+          {
+            token: this.user.token,
+            roomNumber: this.roomNumber
+          }).then(data => {
+          if (!data.flag) {
+            console.log('Quit Failed')
+          }
+        }).catch(e => {
+          if (e) {
+            this.$message.error('Server Error')
+          }
+        })
+      }
       clearInterval(this.answerTimer)
       clearInterval(this.scoreGetTimer)
+      clearInterval(this.winConditionCheckerTimer)
       this.$store.commit('CLEAR_ROOM')
       this.$router.push({name: 'lobby'})
+    },
+    confirmGoBack () {
+      if (!this.onMobile) {
+        this.$confirm('Are you sure?', 'Back To Lobby', {
+          confirmButtonText: 'Yes',
+          cancelButtonText: 'Cancel'
+        }).then(() => {
+          this.goBack(true)
+        })
+      } else {
+        this.showLogOut = true
+      }
     },
     startCountDown () {
       let timer = setInterval(() => {
@@ -157,6 +202,7 @@ export default {
       }, 1000)
     },
     nextQuestion () {
+      if (this.state !== ANSWERING) return
       if (!this.scoreUploaded) {
         this.uploadScore(this.question.index, this.user.choice === this.question.correctChoice ? 1 : 0)
       }
@@ -165,7 +211,7 @@ export default {
         this.answerTimer = null
         this.loading = true
         this.loadingText = 'Waiting for score update...'
-        this.finishMatchHelper()
+        this.checkWinCondition()
         return
       }
       this.scoreUploaded = false
@@ -185,49 +231,85 @@ export default {
       this.uploadScore(this.question.index, this.user.choice === this.question.correctChoice ? 1 : 0)
     },
     uploadScore (index, score) {
-      axiosWrapper('/uploadScore', 'post',
-        {
-          token: this.token,
-          index: index,
-          score: score
-        }).then(() => {
-        console.log('upload succeed')
-      }).catch(e => {
-        if (e) {
-          this.$message.error('Upload Score Failed!')
-        }
-      })
+      this.scoreUploaded = true
+      if (score > 0) {
+        axiosWrapper('/battleroom/addPoints', 'post',
+          {
+            token: this.user.token,
+            roomNumber: this.roomNumber
+          }).catch(e => {
+          if (e) {
+            this.$message.error('Server Error')
+          }
+        })
+      }
     },
     getP2Score () {
       clearInterval(this.scoreGetTimer)
       this.scoreGetTimer = setInterval(() => {
-        axiosWrapper('/getScore', 'post',
+        axiosWrapper('/battleroom/requestScore', 'post',
           {
-            token: this.token
+            token: this.user.token,
+            roomNumber: this.roomNumber
           }).then(data => {
-          this.opponent.score = data.data.opponentScore
-          this.scoreGetCount = data.data.questionAnswered
-          console.log('get score succeed')
-          if (this.scoreGetCount >= this.questions.length) {
-            clearInterval(this.scoreGetTimer)
-            this.finishMatchHelper()
+          if (data.flag) {
+            if (data.data) {
+              this.opponent.score = data.data
+            }
+          } else {
+            this.$message.error('Update score Failed!')
           }
         }).catch(e => {
           if (e) {
-            this.$message.error('Update score Failed!')
+            this.$message.error('Server Error')
             console.log(e)
+          }
+        })
+      }, 2000)
+    },
+    checkWinCondition () {
+      if (this.state !== ANSWERING) return
+      let checkFailed = false
+      clearInterval(this.scoreGetTimer)
+      this.winConditionCheckerTimer = setInterval(() => {
+        axiosWrapper('/battleroom/winCondition', 'post',
+          {
+            token: this.user.token,
+            roomNumber: this.roomNumber
+          }).then(data => {
+          if (data.flag) {
+            if (data.data) {
+              clearInterval(this.answerTimer)
+              clearInterval(this.winConditionCheckerTimer)
+              setTimeout(() => {
+                this.finishMatch()
+              }, 1000)
+            }
+          } else {
+            if (!checkFailed) {
+              checkFailed = true
+              clearInterval(this.winConditionCheckerTimer)
+              this.$message.error('Checked win condition Failed!')
+              setTimeout(() => {
+                this.finishMatch()
+              }, 1000)
+            }
+          }
+        }).catch(e => {
+          if (e) {
+            if (!checkFailed) {
+              checkFailed = true
+              this.$message.error('Server Error')
+              setTimeout(() => {
+                this.finishMatch()
+              }, 1000)
+            }
           }
         })
       }, 1000)
     },
-    finishMatchHelper () {
-      setTimeout(() => {
-        this.finishMatch()
-      }, 1000)
-    },
     finishMatch () {
-      if (this.answerTimer !== null) return
-      if (this.scoreGetCount < this.questions.length) return
+      clearInterval(this.winConditionCheckerTimer)
       this.state = FINISHING
       this.loading = false
       if (this.user.score > this.opponent.score) {
@@ -264,33 +346,6 @@ export default {
           endOptionsPanel.style.marginTop = '0'
         }, 500)
       }
-    },
-    newRound () {
-      this.loading = true
-      this.loadingText = this.loadingText = 'Waiting for join...'
-      axiosWrapper('/goBattle', 'post', {type: 'join', token: this.token}).then(data => {
-        this.$store.commit('SET_ROOM_NUMBER', data.data.roomNumber)
-        this.$store.commit('SET_OPPONENT', data.data.opponent)
-        this.$store.commit('SET_QUESTIONS', data.data.questions)
-        this.$message.success('Join Success!')
-        this.reload()
-      }).catch(e => {
-        if (e) {
-          this.$message.error('Join Failed!')
-          this.loading = false
-        }
-      })
-    },
-    confirmGoBack () {
-      this.$confirm('Are you sure?', 'Back To Lobby', {
-        confirmButtonText: 'Yes',
-        cancelButtonText: 'Cancel'
-      }).then(() => {
-        this.uploadScore(this.questions.length, 0)
-        this.goBack()
-      }).catch((e) => {
-        if (e) console.log('Confirm canceled.')
-      })
     }
   }
 }
@@ -484,28 +539,44 @@ export default {
   color: #60BEFF;
 }
 
-@media (max-width: 48rem) {
-  .el-header {
-    color: black;
-  }
+.logOutCover {
+  position: fixed;
+  height: 100%;
+  width: 100%;
+  top: 0;
+  left: 0;
+  z-index: 99999;
+  background-color: #B4ADAB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
 
+.logOutCover .el-button--danger {
+  width: 80%;
+  margin: 0;
+}
+
+.logOutCover .el-button--plain {
+  width: 80%;
+  margin-top: 20px;
+  margin-left: 0;
+}
+
+@media (max-width: 48rem) {
   .container {
     width: 100%;
     height: 100%;
     background-color: rgba(255, 255, 255, 0.7);
   }
 
-  .container::after {
-    display: none;
+  .optionPanel {
+    margin-top: 0;
   }
 
-  .backButton {
-    background-color: rgba(255, 255, 255, 0);
-  }
-
-  .backButton {
-    margin-top: 1rem;
-    color: #606266;
+  #endScorePanel {
+    font-size: 1rem;
   }
 }
 </style>

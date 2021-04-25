@@ -8,7 +8,7 @@
 
 <script>
 import backgroundMusic from './components/background/backgroundMusic'
-import backgroundStars from './components/background/backgroundStars'
+import backgroundStars from './components/background/BackgroundStars'
 export default {
   name: 'App',
   provide () {

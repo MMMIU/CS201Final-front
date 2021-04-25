@@ -12,7 +12,7 @@ import global from './global'
 import {twoDecimal, upperCase} from './filters/index'
 Vue.prototype.MOBILE = global.MOBILE
 // main.js
-require('./mock')
+// require('./mock')
 
 Vue.use(Vuex)
 Vue.use(ElementUI)

@@ -25,7 +25,8 @@
               </el-button>
             </el-form-item>
             <el-form-item>
-              <el-button type="warning" :disabled="loginButtonEnabled" @click="touristLogin" style="width: 100%">{{'Continue as Tourist' | upperCase}}
+              <el-button type="warning" :disabled="loginButtonEnabled" @click="touristLogin" style="width: 100%">
+                {{ 'Continue as Tourist' | upperCase }}
               </el-button>
             </el-form-item>
           </el-form>
@@ -54,7 +55,7 @@ export default {
       if (value === '') {
         callback(new Error('Password should not be empty'))
       } else {
-        if (this.checkPassword !== '') {
+        if (this.form.checkPassword || this.form.checkPassword !== '') {
           this.$refs.loginForm.validateField('checkPassword')
         }
         callback()
@@ -86,6 +87,7 @@ export default {
           {required: true, message: 'Username should not be empty', trigger: 'blur'}
         ],
         password: [
+          {required: true, message: 'This field should not be empty1', trigger: 'blur'},
           {validator: validatePass, trigger: 'change'}
         ],
         checkPassword: [
@@ -100,7 +102,7 @@ export default {
       backgroundChangeTime: 0.5,
       changeBusy: false,
       onMobile: (document.body.clientWidth <= this.MOBILE),
-      validatePass2
+      REGISTER
     }
   },
   created () {
@@ -170,7 +172,7 @@ export default {
       this.$refs['loginForm'].validate((valid) => {
         if (valid) {
           if (this.type === LOGIN) {
-            this.login()
+            this.login(this.form.username, this.form.password)
           } else {
             this.register()
           }
@@ -180,34 +182,54 @@ export default {
         }
       })
     },
-    login () {
-      axiosWrapper('/authenticate', 'post', {form: this.form}).then(data => {
-        this.$store.commit('SET_TOKEN', data.data.token)
-        this.$store.commit('SET_USER', this.form.username)
-        this.$message.success('login Succeed!')
-        this.$router.push({name: 'lobby'})
+    login (username, password) {
+      axiosWrapper('/user/authenticate', 'post', null, {
+        username: username,
+        password: password
+      }).then(data => {
+        if (data.flag) {
+          if (data.data.token) {
+            this.$store.commit('SET_USER', '#' + data.data.visitorName)
+            this.$store.commit('SET_TOKEN', data.data.token)
+          } else {
+            this.$store.commit('SET_USER', this.form.username)
+            this.$store.commit('SET_TOKEN', data.data)
+          }
+          this.$router.push({name: 'lobby'})
+        } else {
+          this.$message.error('Login Failed! Please Check')
+        }
+        this.loading = false
       }).catch(e => {
         if (e) {
           this.loading = false
-          this.$message.error(this.type + ' Failed!')
+          this.$message.error('Server Error')
         }
       })
     },
     register () {
-      axiosWrapper('/add', 'post', {form: this.form}).then(data => {
-        this.$store.commit('SET_TOKEN', data.data.token)
-        this.$store.commit('SET_USER', this.form.username)
-        this.$message.success('Register Succeed!')
-        this.$router.push({name: 'lobby'})
+      axiosWrapper('/user/add', 'post', null, {
+        username: this.form.username,
+        password: this.form.password
+      }).then(data => {
+        if (data.flag) {
+          this.$store.commit('SET_USER', this.form.username)
+          this.$store.commit('SET_TOKEN', data.data)
+          this.$message.success('Register Successful!')
+          this.$router.push({name: 'lobby'})
+        } else {
+          this.$message.error(this.type + ' Failed!')
+        }
+        this.loading = false
       }).catch(e => {
         if (e) {
           this.loading = false
-          this.$message.error(this.type + ' Failed!')
+          this.$message.error('Server Error')
         }
       })
     },
     touristLogin () {
-
+      this.login('', '')
     }
   }
 }

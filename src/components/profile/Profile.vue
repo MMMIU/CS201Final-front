@@ -103,7 +103,7 @@ export default {
 .backButton {
   color: #303133;
   text-align: center;
-  margin-bottom: 3rem;
+  margin-bottom: 5rem;
 }
 
 .backButton span{
