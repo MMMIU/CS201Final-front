@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-axios.defaults.baseURL = process.env.NODE_ENV === 'development' ? '/api' : ''
+axios.defaults.baseURL = '/api'
 
 function axiosWrapper (url, method, params, data) {
   return axios({url: url, method: method, params: params, data: data}).then(res => {

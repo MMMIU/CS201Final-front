@@ -1,13 +1,11 @@
 <template>
   <div id="app">
-<!--    <background-music></background-music>-->
     <background-stars></background-stars>
     <router-view v-if="isRouterAlive"/>
   </div>
 </template>
 
 <script>
-import backgroundMusic from './components/background/backgroundMusic'
 import backgroundStars from './components/background/BackgroundStars'
 export default {
   name: 'App',
@@ -23,7 +21,7 @@ export default {
       isRouterAlive: true
     }
   },
-  components: {backgroundStars, backgroundMusic},
+  components: {backgroundStars},
   created () {
     window.addEventListener('resize', () => {
       this.screenWidth = document.body.clientWidth

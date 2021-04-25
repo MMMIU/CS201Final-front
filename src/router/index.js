@@ -92,7 +92,6 @@ function checkAllowBack (to) {
     allowBack = to.meta.allowBack
   }
   if (!allowBack) {
-    console.log('back prevented')
     history.pushState(null, null, location.href)
   }
   store.commit('UPDATE_ALLOWBACK', {

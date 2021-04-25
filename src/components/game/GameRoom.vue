@@ -1,5 +1,5 @@
 <template>
-  <div class="gameRoom" v-if="isRouterAlive">
+  <div class="gameRoom">
     <div class="container"
          v-loading="loading"
          element-loading-background="rgba(250, 250, 250, 0.8)"
@@ -41,8 +41,8 @@
             <div class="timerPanel">
               <div class="timerBar" :style="{width: (answerTimeRemain/answerTime*100)+'%'}"></div>
             </div>
-            <el-steps class="steps" :active="this.question.index-1" finish-status="success">
-              <el-step v-for="i in questions.length" :key="i"></el-step>
+            <el-steps class="steps" :active="question.index-1">
+              <el-step v-for="i in questions.length" :key="i" :status="correctOrNot[i]"></el-step>
             </el-steps>
           </el-header>
           <el-container class="questionPanel">
@@ -114,7 +114,7 @@ export default {
       loading: false,
       loadingText: null,
       buttonDisabled: false,
-      isRouterAlive: true,
+      correctOrNot: [],
       scoreGetTimer: null,
       scoreGetCount: 0,
       scoreUploaded: false,
@@ -126,6 +126,13 @@ export default {
   created () {
     this.user.token = this.$store.state.token
     this.roomNumber = this.$store.state.roomNumber
+    this.answerTimeRemain = this.answerTime
+    this.question.content = this.questions[this.question.index - 1].question
+    this.question.options = this.questions[this.question.index - 1].options
+    this.question.correctChoice = this.questions[this.question.index - 1].answer
+    for (let i = 0; i < this.questions.length; i++) {
+      this.correctOrNot.push('')
+    }
     window.addEventListener('resize', () => {
       if (document.body.clientWidth > this.MOBILE && this.onMobile) {
         this.onMobile = false
@@ -134,14 +141,14 @@ export default {
         this.onMobile = true
       }
     })
+    window.addEventListener('beforeunload', () => {
+      if (this.state === ANSWERING) {
+        this.goBack(true)
+      }
+    })
   },
   mounted () {
-    this.answerTimeRemain = this.answerTime
-    this.question.content = this.questions[this.question.index - 1].question
-    this.question.options = this.questions[this.question.index - 1].options
-    this.question.correctChoice = this.questions[this.question.index - 1].answer
     this.startCountDown()
-    // this.state = ANSWERING
   },
   methods: {
     goBack (midway) {
@@ -233,15 +240,20 @@ export default {
     uploadScore (index, score) {
       this.scoreUploaded = true
       if (score > 0) {
+        this.correctOrNot[this.question.index - 1] = 'success'
         axiosWrapper('/battleroom/addPoints', 'post',
           {
             token: this.user.token,
             roomNumber: this.roomNumber
-          }).catch(e => {
+          }).then(() => {
+          console.log('Score Uploaded')
+        }).catch(e => {
           if (e) {
             this.$message.error('Server Error')
           }
         })
+      } else {
+        this.correctOrNot[this.question.index - 1] = 'error'
       }
     },
     getP2Score () {
@@ -252,9 +264,13 @@ export default {
             token: this.user.token,
             roomNumber: this.roomNumber
           }).then(data => {
+          console.log(data)
           if (data.flag) {
             if (data.data) {
+              console.log('Opponent\'s Score Updated')
               this.opponent.score = data.data
+            } else {
+              console.log('Opponent\'s Score Update Failed')
             }
           } else {
             this.$message.error('Update score Failed!')
@@ -277,8 +293,10 @@ export default {
             token: this.user.token,
             roomNumber: this.roomNumber
           }).then(data => {
+          console.log('Checking win condition')
           if (data.flag) {
             if (data.data) {
+              console.log('Win condition checked')
               clearInterval(this.answerTimer)
               clearInterval(this.winConditionCheckerTimer)
               setTimeout(() => {
@@ -486,8 +504,8 @@ export default {
 .p1Progress {
   float: left;
   background-color: #42b983;
-  min-width: 100px;
-  max-width: calc(100% - 100px);
+  min-width: 150px;
+  max-width: calc(100% - 150px);
   text-indent: 10px;
 }
 
