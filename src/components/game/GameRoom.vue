@@ -3,7 +3,7 @@
     <div class="container"
          v-loading="loading"
          element-loading-background="rgba(250, 250, 250, 0.8)"
-         :element-loading-text="loadingText"
+         element-loading-text="Waiting for score update..."
     >
       <div class="startCover" v-if="state===0">
         <div>{{ startCountDownSecond }}</div>
@@ -53,7 +53,7 @@
                          :disabled="buttonDisabled"
                          :key="option"
                          :loading="buttonDisabled&&index===user.choice"
-                         :type="buttonDisabled?(index===user.choice?(user.choice===question.correctChoice?'success':'danger'):''):(index%2===0?'':'info')"
+                         :type="buttonDisabled?(index===user.choice?(user.choice===question.correctChoice?'success':'danger'):''):''"
                          @click="checkChoice(index)"
               >{{ option }}
               </el-button>
@@ -112,7 +112,6 @@ export default {
       showScores: false,
       showEndOptions: false,
       loading: false,
-      loadingText: null,
       buttonDisabled: false,
       correctOrNot: [],
       scoreGetTimer: null,
@@ -217,7 +216,6 @@ export default {
         clearInterval(this.answerTimer)
         this.answerTimer = null
         this.loading = true
-        this.loadingText = 'Waiting for score update...'
         return
       }
       this.scoreUploaded = false
@@ -234,6 +232,9 @@ export default {
         this.user.score++
       }
       this.scoreUploaded = true
+      if (this.question.index >= this.questions.length) {
+        this.loading = true
+      }
       this.uploadScore(this.question.index, this.user.choice === this.question.correctChoice ? 1 : 0)
     },
     uploadScore (index, score) {
@@ -307,6 +308,7 @@ export default {
                   roomNumber: this.roomNumber
                 }).then(data => {
                 if (data.flag) {
+                  console.log('Final Score Checked')
                   if (data.data) {
                     console.log('Opponent\'s Score Updated')
                     this.opponent.score = data.data

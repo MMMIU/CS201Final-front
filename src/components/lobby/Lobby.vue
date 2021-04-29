@@ -18,8 +18,10 @@
                    :autoplay="autoPlay"
       >
         <el-carousel-item v-for="(item,index) in optionList" :key="item">
-          <h3 @click="goOption(index)">{{ item }}</h3><br>
-          <h6 @click="goOption(index)">{{ descriptionList[index] }}</h6>
+          <div style="height: 100%;width: 100%" @click="goOption(index)">
+            <h3>{{ item }}</h3><br>
+            <h6>{{ descriptionList[index] }}</h6>
+          </div>
         </el-carousel-item>
       </el-carousel>
       <el-button type="danger" @click="logOut(false)">Log Out</el-button>
@@ -114,6 +116,7 @@ export default {
     goProfile () {
       if (this.token < 0) {
         this.$message.warning('Please login or register first')
+        return
       }
       this.loading = true
       this.loadingText = 'Waiting for profile data...'
@@ -312,11 +315,10 @@ export default {
 }
 
 .lobbyContainer .el-carousel__item h3 {
-  /*color: #475669;*/
   color: whitesmoke;
   font-size: 4rem;
   opacity: 0.75;
-  margin-top: 160px;
+  padding-top: 160px;
   margin-left: 20px;
   text-align: left;
 }
